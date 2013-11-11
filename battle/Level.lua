@@ -6,8 +6,8 @@ Level.__index = Level
 
 function Level.new(params)
 	local newLevel = {}
-	newLevel.board = Board.new(params.boardParams)
 	newLevel.bg = BG.new(params.bgParams)
+	newLevel.board = Board.new(params.boardParams)
 	
 	newLevel.name = params.name
 	
