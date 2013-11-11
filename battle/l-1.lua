@@ -10,7 +10,8 @@ local _H = display.contentHeight
 
 local levelParams = {name = "Level 1",
 	boardParams = {name = "Board 1"},
-	bgParams = {name = "BG 1", posX = 0, posY = 0, x = _W, y = _H}
+	bgParams = {name = "BG 1", posX = 0, posY = 0, x = _W, y = _H},
+	unitParams = {name = "Unit", posX = 32, posY = 60}
 }
 
 function scene:createScene(event)
