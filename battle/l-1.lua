@@ -7,17 +7,20 @@ local level
 local _W = display.contentWidth
 local _H = display.contentHeight
 local moving = false
+local defending = false
+local cancelled = false
+local switched = false
 
 local levelParams = {name = "Level 1",
 	boardParams = {name = "Board 1"},
 	bgParams = {name = "BG 1", posX = 0, posY = 0, x = _W, y = _H},
 	unitParams = {
-					{name = "Infantry", posX = 0, posY = 0, moves = 3},
-					{name = "Infantry", posX = 7, posY = 0, moves = 3}
+					{name = "Infantry", posX = 0, posY = 0, moves = 3, melee = true},
+					{name = "Tank", posX = 7, posY = 0, moves = 7, melee = false}
 				},
 	enemyParams = {
-					{name = "Infantry", posX = 7, posY = 7, moves = 3},
-					{name = "Tank", posX = 0, posY = 7, moves = 2}
+					{name = "Infantry", posX = 7, posY = 7, moves = 3, melee = true},
+					{name = "Tank", posX = 0, posY = 7, moves = 2, melee = false}
 				}
 }
 
@@ -40,10 +43,6 @@ function scene:exitScene(event)
 	
 end
 
-local function onEveryFrame(event)
-	
-end
-
 local function moveListener(event)
 	if event.phase == "ended" then
 		moveText.text = "Where will you move to?"
@@ -51,23 +50,79 @@ local function moveListener(event)
 	end
 end
 
-local function createMenu()
-	if move == nil then
-		moveText = display.newText("Moves remaining: " .. unitMovement, 185, 325, native.systemFontBold, 12)
-		move = display.newImage("move.png", 32, 325)
+local function switchListener(event)
+	if event.phase == "ended" then
+		if level.unit[currentUnit].melee == true then
+			level.unit[currentUnit].melee = false
+		else
+			level.unit[currentUnit].melee = true
+		end
+		switched = true
+	end
+end
+
+local function defendListener(event)
+	if event.phase == "ended" then
+		print ("Defending!")
+		defending = true
+	end
+end
+
+local function cancelListener(event)
+	if event.phase == "ended" then
+		print ("Cancelled")
+		cancelled = true
+	end
+end
+
+local function createMenu(melee)
+	if move == nil and switch == nil and defend == nil and cancel == nil then
+		moveText = display.newText("Moves remaining: " .. unitMovement, 185, 25, native.systemFontBold, 12)
+		move = display.newImage("assets/move.png", 32, 325)
 		move:addEventListener("touch", moveListener)
+		if melee == true then
+			switch = display.newImage("assets/melee.png", 102, 325)
+		else
+			switch = display.newImage("assets/ranged.png", 102, 325)
+		end
+		switch:addEventListener("touch", switchListener)
+		defend = display.newImage("assets/defend.png", 172, 325)
+		defend:addEventListener("touch", defendListener)
+		cancel = display.newImage("assets/cancel.png", 242, 325)
+		cancel:addEventListener("touch", cancelListener)
 	end
 end
 
 local function destroyMenu()
-	if move ~= nil then
+	if move ~= nil and switch ~= nil and defend ~= nil and cancel ~= nil then
 		move:removeSelf()
 		move:removeEventListener("touch", moveListener)
+		switch:removeSelf()
+		switch:removeEventListener("touch", switchListener)
+		defend:removeSelf()
+		defend:removeEventListener("touch", defendListener)
+		cancel:removeSelf()
+		cancel:removeEventListener("touch", cancelListener)
 		moveText:removeSelf()
-		if rect~= nil then
-			rect:removeSelf()
-		end
 		move = nil
+		switch = nil
+		defend = nil
+		cancel = nil
+	end
+end
+
+local function onEveryFrame(event)
+	if switched == true then
+		switched = false
+		destroyMenu()
+	end
+	if defending == true then
+		defending = false
+		destroyMenu()
+	end
+	if cancelled == true then
+		cancelled = false
+		destroyMenu()
 	end
 end
 
@@ -84,7 +139,8 @@ local function handleTouch(event)
 					print ("Unit touched!")
 					currentUnit = i
 					unitMovement = level.unit[i].moves
-					createMenu() 
+					destroyMenu()
+					createMenu(level.unit[i].melee) 
 					break
 				else
 					destroyMenu()
@@ -113,6 +169,13 @@ local function moveTouch(event)
 				end
 			end
 			local tempMovement = math.abs(level.unit[currentUnit].posX - touchX) + math.abs(level.unit[currentUnit].posY - touchY)
+			if level.unit[currentUnit].posX - touchX > 0 then
+				level.unit[currentUnit].anim:setSequence("idle_left")
+				level.unit[currentUnit].anim:play()
+			elseif level.unit[currentUnit].posX - touchX < 0 then
+				level.unit[currentUnit].anim:setSequence("idle_right")
+				level.unit[currentUnit].anim:play()
+			end
 			if tempMovement <= unitMovement and check == true then
 				level.unit[currentUnit].posX = touchX
 				level.unit[currentUnit].posY = touchY
@@ -126,15 +189,6 @@ local function moveTouch(event)
 				end
 			end
 			moving = false
-			for i in pairs(level.unit) do
-				if level.unit[i].posX >= 4 then
-					level.unit[i].anim:setSequence("idle_left")
-					level.unit[i].anim:play()
-				else
-					level.unit[i].anim:setSequence("idle_right")
-					level.unit[i].anim:play()
-				end
-			end
 		end
 	end
 end
