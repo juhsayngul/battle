@@ -1,5 +1,6 @@
 local storyboard = require( "storyboard" )
 local Level = require( "Level" )
+local Menu = require ("Menu")
 
 local scene = storyboard.newScene()
 
@@ -10,17 +11,19 @@ local moving = false
 local defending = false
 local cancelled = false
 local switched = false
+local buttonListener = {}
+local menu = nil
 
-local levelParams = {name = "Level 1",
-	boardParams = {name = "Board 1"},
-	bgParams = {name = "BG 1", posX = 0, posY = 0, x = _W, y = _H},
+local levelParams = {
+	boardParams = {},
+	bgParams = {posX = 0, posY = 0, x = _W, y = _H},
 	unitParams = {
-					{name = "Infantry", posX = 0, posY = 0, moves = 3, melee = true},
-					{name = "Tank", posX = 7, posY = 0, moves = 7, melee = false}
+					{unitType = "infantry_f", posX = 0, posY = 0, moves = 3, melee = true},
+					{unitType = "tank_f", posX = 7, posY = 0, moves = 7, melee = false}
 				},
 	enemyParams = {
-					{name = "Infantry", posX = 7, posY = 7, moves = 3, melee = true},
-					{name = "Tank", posX = 0, posY = 7, moves = 2, melee = false}
+					{unitType = "infantry_e", posX = 7, posY = 7, moves = 3, melee = true},
+					{unitType = "tank_e", posX = 0, posY = 7, moves = 2, melee = false}
 				}
 }
 
@@ -35,7 +38,6 @@ function scene:enterScene(event)
     local screenGroup = self.view
 	
     -- storyboard.removeScene("title-screen")
-	level:listen()
 end
 
 function scene:exitScene(event)
@@ -43,14 +45,14 @@ function scene:exitScene(event)
 	
 end
 
-local function moveListener(event)
+buttonListener.move = function (event)
 	if event.phase == "ended" then
-		moveText.text = "Where will you move to?"
+		menu.moveText.text = "Where will you move to?"
 		moving = true
 	end
 end
 
-local function switchListener(event)
+buttonListener.switch = function (event)
 	if event.phase == "ended" then
 		if level.unit[currentUnit].melee == true then
 			level.unit[currentUnit].melee = false
@@ -61,14 +63,14 @@ local function switchListener(event)
 	end
 end
 
-local function defendListener(event)
+buttonListener.defend = function (event)
 	if event.phase == "ended" then
 		print ("Defending!")
 		defending = true
 	end
 end
 
-local function cancelListener(event)
+buttonListener.cancel = function (event)
 	if event.phase == "ended" then
 		print ("Cancelled")
 		cancelled = true
@@ -76,39 +78,14 @@ local function cancelListener(event)
 end
 
 local function createMenu(melee)
-	if move == nil and switch == nil and defend == nil and cancel == nil then
-		moveText = display.newText("Moves remaining: " .. unitMovement, 185, 25, native.systemFontBold, 12)
-		move = display.newImage("assets/move.png", 32, 325)
-		move:addEventListener("touch", moveListener)
-		if melee == true then
-			switch = display.newImage("assets/melee.png", 102, 325)
-		else
-			switch = display.newImage("assets/ranged.png", 102, 325)
-		end
-		switch:addEventListener("touch", switchListener)
-		defend = display.newImage("assets/defend.png", 172, 325)
-		defend:addEventListener("touch", defendListener)
-		cancel = display.newImage("assets/cancel.png", 242, 325)
-		cancel:addEventListener("touch", cancelListener)
-	end
+	menu = Menu.new(buttonListener, melee, unitMovement)
 end
 
 local function destroyMenu()
-	if move ~= nil and switch ~= nil and defend ~= nil and cancel ~= nil then
-		move:removeSelf()
-		move:removeEventListener("touch", moveListener)
-		switch:removeSelf()
-		switch:removeEventListener("touch", switchListener)
-		defend:removeSelf()
-		defend:removeEventListener("touch", defendListener)
-		cancel:removeSelf()
-		cancel:removeEventListener("touch", cancelListener)
-		moveText:removeSelf()
-		move = nil
-		switch = nil
-		defend = nil
-		cancel = nil
+	if menu ~= nil then
+		menu:destroy(buttonListener)
 	end
+	menu = nil
 end
 
 local function onEveryFrame(event)
@@ -127,6 +104,8 @@ local function onEveryFrame(event)
 end
 
 local function handleTouch(event)
+	local i
+	
 	if event.phase == "ended" then
 	--if grid is touched
 		local touchX = math.floor((event.x - 32) / 32)
@@ -157,6 +136,8 @@ local function handleTouch(event)
 end
 
 local function moveTouch(event)
+	local i
+	
 	if event.phase == "ended" and moving == true then
 		local check = true
 		local touchX = math.floor((event.x - 32) / 32)
@@ -183,7 +164,7 @@ local function moveTouch(event)
 				level.unit[currentUnit].anim.y = (touchY * 32) + 60
 			else
 				if check == false then
-					print ("An ememy is on that square.")
+					print ("An enemy is on that square.")
 				else
 					print ("Too far away!")
 				end
