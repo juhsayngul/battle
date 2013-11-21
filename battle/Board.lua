@@ -5,6 +5,7 @@ function Board.new(params)
 	local newBoard = {}
 	local offsetX = 32
 	local offsetY = 60
+	newBoard.group = display.newGroup()
 	
 	for i = 0, 7 do
 		for j = 0, 7 do
@@ -12,9 +13,10 @@ function Board.new(params)
 			newBoard.rect.strokeWidth = 2
 			newBoard.rect:setFillColor(0, 0, 0, 0)
 			newBoard.rect:setStrokeColor(255, 255, 255)
+			newBoard.group:insert(newBoard.rect)
 		end
 	end
-	newBoard.group = display.newGroup()
+	
 	setmetatable(newBoard, Board)
 	return newBoard
 end

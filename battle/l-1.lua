@@ -1,5 +1,6 @@
 local storyboard = require( "storyboard" )
 local Level = require( "Level" )
+local Menu = require ("Menu")
 
 local scene = storyboard.newScene()
 
@@ -10,6 +11,8 @@ local moving = false
 local defending = false
 local cancelled = false
 local switched = false
+local buttonListener = {}
+local menu = nil
 
 local levelParams = {
 	boardParams = {},
@@ -42,14 +45,14 @@ function scene:exitScene(event)
 	
 end
 
-local function moveListener(event)
+buttonListener.move = function (event)
 	if event.phase == "ended" then
-		moveText.text = "Where will you move to?"
+		menu.moveText.text = "Where will you move to?"
 		moving = true
 	end
 end
 
-local function switchListener(event)
+buttonListener.switch = function (event)
 	if event.phase == "ended" then
 		if level.unit[currentUnit].melee == true then
 			level.unit[currentUnit].melee = false
@@ -60,14 +63,14 @@ local function switchListener(event)
 	end
 end
 
-local function defendListener(event)
+buttonListener.defend = function (event)
 	if event.phase == "ended" then
 		print ("Defending!")
 		defending = true
 	end
 end
 
-local function cancelListener(event)
+buttonListener.cancel = function (event)
 	if event.phase == "ended" then
 		print ("Cancelled")
 		cancelled = true
@@ -75,39 +78,14 @@ local function cancelListener(event)
 end
 
 local function createMenu(melee)
-	if move == nil and switch == nil and defend == nil and cancel == nil then
-		moveText = display.newText("Moves remaining: " .. unitMovement, 185, 25, native.systemFontBold, 12)
-		move = display.newImage("assets/move.png", 32, 325)
-		move:addEventListener("touch", moveListener)
-		if melee == true then
-			switch = display.newImage("assets/melee.png", 102, 325)
-		else
-			switch = display.newImage("assets/ranged.png", 102, 325)
-		end
-		switch:addEventListener("touch", switchListener)
-		defend = display.newImage("assets/defend.png", 172, 325)
-		defend:addEventListener("touch", defendListener)
-		cancel = display.newImage("assets/cancel.png", 242, 325)
-		cancel:addEventListener("touch", cancelListener)
-	end
+	menu = Menu.new(buttonListener, melee, unitMovement)
 end
 
 local function destroyMenu()
-	if move ~= nil and switch ~= nil and defend ~= nil and cancel ~= nil then
-		move:removeSelf()
-		move:removeEventListener("touch", moveListener)
-		switch:removeSelf()
-		switch:removeEventListener("touch", switchListener)
-		defend:removeSelf()
-		defend:removeEventListener("touch", defendListener)
-		cancel:removeSelf()
-		cancel:removeEventListener("touch", cancelListener)
-		moveText:removeSelf()
-		move = nil
-		switch = nil
-		defend = nil
-		cancel = nil
+	if menu ~= nil then
+		menu:destroy(buttonListener)
 	end
+	menu = nil
 end
 
 local function onEveryFrame(event)
