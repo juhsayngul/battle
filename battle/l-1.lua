@@ -11,16 +11,16 @@ local defending = false
 local cancelled = false
 local switched = false
 
-local levelParams = {name = "Level 1",
-	boardParams = {name = "Board 1"},
-	bgParams = {name = "BG 1", posX = 0, posY = 0, x = _W, y = _H},
+local levelParams = {
+	boardParams = {},
+	bgParams = {posX = 0, posY = 0, x = _W, y = _H},
 	unitParams = {
-					{name = "Infantry", posX = 0, posY = 0, moves = 3, melee = true},
-					{name = "Tank", posX = 7, posY = 0, moves = 7, melee = false}
+					{unitType = "infantry_f", posX = 0, posY = 0, moves = 3, melee = true},
+					{unitType = "tank_f", posX = 7, posY = 0, moves = 7, melee = false}
 				},
 	enemyParams = {
-					{name = "Infantry", posX = 7, posY = 7, moves = 3, melee = true},
-					{name = "Tank", posX = 0, posY = 7, moves = 2, melee = false}
+					{unitType = "infantry_e", posX = 7, posY = 7, moves = 3, melee = true},
+					{unitType = "tank_e", posX = 0, posY = 7, moves = 2, melee = false}
 				}
 }
 
@@ -35,7 +35,6 @@ function scene:enterScene(event)
     local screenGroup = self.view
 	
     -- storyboard.removeScene("title-screen")
-	level:listen()
 end
 
 function scene:exitScene(event)
@@ -127,6 +126,8 @@ local function onEveryFrame(event)
 end
 
 local function handleTouch(event)
+	local i
+	
 	if event.phase == "ended" then
 	--if grid is touched
 		local touchX = math.floor((event.x - 32) / 32)
@@ -157,6 +158,8 @@ local function handleTouch(event)
 end
 
 local function moveTouch(event)
+	local i
+	
 	if event.phase == "ended" and moving == true then
 		local check = true
 		local touchX = math.floor((event.x - 32) / 32)
@@ -183,7 +186,7 @@ local function moveTouch(event)
 				level.unit[currentUnit].anim.y = (touchY * 32) + 60
 			else
 				if check == false then
-					print ("An ememy is on that square.")
+					print ("An enemy is on that square.")
 				else
 					print ("Too far away!")
 				end
