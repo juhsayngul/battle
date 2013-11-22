@@ -69,10 +69,8 @@ base["tank_f"] = tank
 base["heli_f"] = heli
 base["cannon_f"] = cannon
 
-UnitBaseStats.base = base
-
 function UnitBaseStats.getBaseStats(unitType)
-	return UnitBaseStats.base[unitType]
+	return base[unitType]
 end
 
 return UnitBaseStats

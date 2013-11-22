@@ -83,9 +83,7 @@ function Unit:switchAtk()
 end
 
 function Unit:distanceTo(loc)
-	local distance = math.abs(self.pos.x - loc.x) + math.abs(self.pos.y - loc.y)
-	print (distance)
-	return distance
+	return math.abs(self.pos.x - loc.x) + math.abs(self.pos.y - loc.y)
 end
 
 function Unit:isAt(loc)

@@ -54,7 +54,7 @@ end
 function scene:enterScene(event)
     local screenGroup = self.view
 	
-    -- storyboard.removeScene("title-screen")
+    storyboard.removeScene("Title-Screen")
 	
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 	Runtime:addEventListener("touch", handleTouch)

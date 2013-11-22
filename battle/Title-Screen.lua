@@ -1,40 +1,35 @@
 local storyboard = require( "storyboard" )
+local LevelParams = require("LevelParams")
+
 local scene = storyboard.newScene()
 
-local _W, _H = display.contentWidth, display.contentHeight
-local levelParams = {
-	levelName = "Level 1",
-	boardParams = {},
-	bgParams = {pos = {x = 0, y = 0}, length = {x = _W, y = _H}},
-	friendParams = {
-					{unitType = "cannon_f", pos = {x = 0, y = 7}},
-					{unitType = "tank_f", pos = {x = 2, y = 7}},
-					{unitType = "infantry_f", pos = {x = 5, y = 7}},
-					{unitType = "heli_f", pos = {x = 7, y = 7}}
-				},
-	enemyParams = {
-					{unitType = "infantry_e", pos = {x = 7, y = 0}},
-					{unitType = "tank_e", pos = {x = 0, y = 0}}
-				}
+local options = {
+	effect = "slideUp",
+	time = 300,
+	params = LevelParams.getLevelParams("Level-1")
 }
 
-local options = {params = levelParams}
+local salute, startButton
+local startTouch
 
 function scene:createScene(event)
     local screenGroup = self.view
+	
+	salute = display.newImage("assets/salute.png", 50, 20)
+	startButton = display.newImage("assets/start_button.png", 60, 350)
+	screenGroup:insert(salute)
+	screenGroup:insert(startButton)
 end
 
 function scene:enterScene(event)
     local screenGroup = self.view
-	salute = display.newImage("assets/salute.png", 50, 20)
-	startButton = display.newImage("assets/start_button.png", 60, 350)
+	
 	startButton:addEventListener("touch", startTouch)
 end
 
 function scene:exitScene(event)
     local screenGroup = self.view
-	salute:removeSelf()
-	startButton:removeSelf()
+	
 	startButton:removeEventListener("touch", startTouch)
 end
 

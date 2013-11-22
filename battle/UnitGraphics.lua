@@ -122,10 +122,8 @@ properties["tank_f"] = tank_f
 properties["heli_f"] = heli_f
 properties["cannon_f"] = cannon_f
 
-UnitGraphics.properties = properties
-
 function UnitGraphics.getProperties(unitType)
-	return UnitGraphics.properties[unitType]
+	return properties[unitType]
 end
 
 return UnitGraphics
