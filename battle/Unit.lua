@@ -6,7 +6,6 @@ Unit.__index = Unit
 
 function Unit.new(params)
 	local newUnit = {}
-	newUnit.name = params.name
 	
 	local properties = UnitGraphics.getProperties(params.unitType)
 	local imageSheet = graphics.newImageSheet(properties.fileName, properties.sheetData)
@@ -20,12 +19,12 @@ function Unit.new(params)
 		health = base.health,
 		moves = base.moves
 	}
-	newUnit.pos = {x = params.posX, y = params.posY}
+	newUnit.pos = {x = params.pos.x, y = params.pos.y}
 	newUnit.atkMelee = newUnit.stats.base.melee.atk >= newUnit.stats.base.ranged.atk
 	newUnit.anim = display.newSprite(imageSheet, properties.sequenceData)
 	newUnit.anim:setReferencePoint(display.TopLeftReferencePoint)
-	newUnit.anim.x = (params.posX * 32) + 32
-	newUnit.anim.y = (params.posY * 32) + 60
+	newUnit.anim.x = (params.pos.x * 32) + 32
+	newUnit.anim.y = (params.pos.y * 32) + 60
 	newUnit.anim:play()
 	newUnit.group = display.newGroup()
 	
@@ -33,15 +32,15 @@ function Unit.new(params)
 	return newUnit
 end
 
-function Unit:tryMove(touch, enemyArray, friendArray)
+function Unit:tryMove(touch, enemies, friends)
 	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
-	local checkEnemy, checkFriend = false, false
+	local isEnemyHere, isFriendHere = false, false
 	
-	for i in pairs(enemyArray) do
-		checkEnemy = checkEnemy or enemyArray[i]:isAt(touch)
+	for i in pairs(enemies) do
+		isEnemyHere = isEnemyHere or enemies[i]:isAt(touch)
 	end
-	for i in pairs(friendArray) do
-		checkFriend = checkFriend or friendArray[i]:isAt(touch)
+	for i in pairs(friends) do
+		isFriendHere = isFriendHere or friends[i]:isAt(touch)
 	end
 
 	-- change direction of unit to match desired move
@@ -52,9 +51,9 @@ function Unit:tryMove(touch, enemyArray, friendArray)
 	end
 	self.anim:play()
 	
-	if checkEnemy then
+	if isEnemyHere then
 		print ("An enemy is on that square.")
-	elseif checkFriend then
+	elseif isFriendHere then
 		print ("A friendly unit is on that square.")
 	elseif not enoughMoves then
 		print ("Too far away!")
