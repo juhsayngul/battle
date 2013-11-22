@@ -20,7 +20,7 @@ function scene:exitScene(event)
 end
 
 startTouch = function(event)
-	storyboard.gotoScene("L-1")
+	storyboard.gotoScene("Level", options)
 end
 
 scene:addEventListener("createScene", scene)

@@ -9,7 +9,7 @@ local levelParams = {
 	boardParams = {},
 	bgParams = {pos = {x = 0, y = 0}, length = {x = _W, y = _H}},
 	unitParams = {
-					{unitType = "infantry_f", pos = {x = 0, y = 0}},
+					{unitType = "cannon_f", pos = {x = 0, y = 0}},
 					{unitType = "tank_f", pos = {x = 7, y = 0}}
 				},
 	enemyParams = {

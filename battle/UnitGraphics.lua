@@ -38,6 +38,44 @@ tank_f.sequenceData =
 	}
 }
 
+local heli_f = {}
+heli_f.sheetData = {width = 32, height = 32, numFrames = 6, sheetContentWidth = 192, sheetContentHeight = 32}
+heli_f.fileName = "assets/heli_f_anim.png"
+heli_f.sequenceData = 
+{
+	{
+		name = "idle_right",
+		frames = {1, 2, 1, 3},
+		time = 200,
+		loopCount = 0
+	},
+	{
+		name = "idle_left",
+		frames = {6, 5, 6, 4},
+		time = 200,
+		loopCount = 0
+	}
+}
+
+local cannon_f = {}
+cannon_f.sheetData = {width = 32, height = 36, numFrames = 6, sheetContentWidth = 192, sheetcontentHeight = 36}
+cannon_f.fileName = "assets/cannon_f_anim.png"
+cannon_f.sequenceData = 
+{
+	{
+		name = "idle_right",
+		frames = {1, 2, 3, 2},
+		time = 500,
+		loopCount = 0
+	},
+	{
+		name = "idle_left",
+		frames = {4, 5, 6, 5},
+		time = 500,
+		loopCount = 0
+	}
+}
+
 local infantry_e = {}
 infantry_e.sheetData = {width = 32, height = 36, numFrames = 6, sheetContentWidth = 192, sheetContentHeight = 36}
 infantry_e.fileName = "assets/infantry_e_anim.png"
@@ -81,6 +119,8 @@ properties["infantry_e"] = infantry_e
 properties["infantry_f"] = infantry_f
 properties["tank_e"] = tank_e
 properties["tank_f"] = tank_f
+properties["heli_f"] = heli_f
+properties["cannon_f"] = cannon_f
 
 UnitGraphics.properties = properties
 

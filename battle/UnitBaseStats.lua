@@ -31,11 +31,43 @@ local tank = {
 	moves = 5
 }
 
+local heli = {
+	melee = {
+		atk = 1,
+		def = 1,
+		rng = 1,
+	},
+	ranged = {
+		atk = 1,
+		def = 1,
+		rng = 1
+	},
+	health = 1,
+	moves = 1
+}
+
+local cannon = {
+	melee = {
+		atk = 1,
+		def = 1,
+		rng = 1
+	},
+	ranged = {
+		atk = 1,
+		def = 1,
+		rng = 1
+	},
+	health = 1,
+	moves = 1
+}
+
 local base = {}
 base["infantry_e"] = infantry
 base["infantry_f"] = infantry
 base["tank_e"] = tank
 base["tank_f"] = tank
+base["heli_f"] = heli
+base["cannon_f"] = cannon
 
 UnitBaseStats.base = base
 
