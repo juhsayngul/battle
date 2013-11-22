@@ -1,7 +1,7 @@
 local Menu = {}
 Menu.__index = Menu
 
-function Menu.new(buttonListener, melee, unitMovement)
+function Menu.new(buttonListener, selectedUnit)
 	newMenu = {}
 	newMenu.group = display.newGroup()
 	
@@ -9,7 +9,7 @@ function Menu.new(buttonListener, melee, unitMovement)
 	newMenu.button.group = display.newGroup()
 	
 	newMenu.button.move = display.newImage("assets/move.png", 32, 325)
-	if melee == true then
+	if selectedUnit.melee == true then
 		newMenu.button.switch = display.newImage("assets/melee.png", 102, 325)
 	else
 		newMenu.button.switch = display.newImage("assets/ranged.png", 102, 325)
@@ -27,7 +27,7 @@ function Menu.new(buttonListener, melee, unitMovement)
 	newMenu.button.group:insert(newMenu.button.defend)
 	newMenu.button.group:insert(newMenu.button.cancel)
 	
-	newMenu.moveText = display.newText("Moves remaining: " .. unitMovement, 185, 25, native.systemFontBold, 12)
+	newMenu.moveText = display.newText("Moves remaining: " .. selectedUnit.stats.live.moves, 185, 25, native.systemFontBold, 12)
 	
 	newMenu.group:insert(newMenu.button.group)
 	newMenu.group:insert(newMenu.moveText)
