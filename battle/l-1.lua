@@ -44,7 +44,7 @@ function scene:enterScene(event)
 	
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 	Runtime:addEventListener("touch", handleTouch)
-    -- storyboard.removeScene("title-screen")
+    storyboard.removeScene("MainMenu")
 end
 
 function scene:exitScene(event)
