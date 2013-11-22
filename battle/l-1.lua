@@ -7,12 +7,17 @@ local scene = storyboard.newScene()
 local level
 local _W = display.contentWidth
 local _H = display.contentHeight
+
 local moving = false
 local defending = false
 local cancelled = false
 local switched = false
 local buttonListener = {}
 local menu = nil
+
+local selectedUnit
+
+local onEveryFrame, handleTouch
 
 local levelParams = {
 	boardParams = {},
@@ -37,12 +42,16 @@ end
 function scene:enterScene(event)
     local screenGroup = self.view
 	
+	Runtime:addEventListener("enterFrame", onEveryFrame)
+	Runtime:addEventListener("touch", handleTouch)
     -- storyboard.removeScene("title-screen")
 end
 
 function scene:exitScene(event)
     local screenGroup = self.view
 	
+    Runtime:removeEventListener("enterFrame", onEveryFrame)
+    Runtime:removeEventListener("touch", handleTouch)
 end
 
 buttonListener.move = function (event)
@@ -54,11 +63,7 @@ end
 
 buttonListener.switch = function (event)
 	if event.phase == "ended" then
-		if level.unit[currentUnit].melee == true then
-			level.unit[currentUnit].melee = false
-		else
-			level.unit[currentUnit].melee = true
-		end
+		selectedUnit:switchAtk()
 		switched = true
 	end
 end
@@ -77,18 +82,22 @@ buttonListener.cancel = function (event)
 	end
 end
 
-local function createMenu(melee)
-	menu = Menu.new(buttonListener, melee, unitMovement)
+local function createMenu(unit)
+	selectedUnit = unit
+	menu = Menu.new(buttonListener, selectedUnit)
 end
 
 local function destroyMenu()
 	if menu ~= nil then
 		menu:destroy(buttonListener)
 	end
+	selectedUnit = nil
 	menu = nil
 end
 
-local function onEveryFrame(event)
+onEveryFrame = function(event)
+	level:onEveryFrame(event)
+	
 	if switched == true then
 		switched = false
 		destroyMenu()
@@ -103,80 +112,48 @@ local function onEveryFrame(event)
 	end
 end
 
-local function handleTouch(event)
+handleTouch = function(event)
+	level:handleTouch(event)
+	
 	local i
+	
+	local touch = {
+		x = math.floor((event.x - 32) / 32),
+		y = math.floor((event.y - 60) / 32),
+		hit = false
+	}
 	
 	if event.phase == "ended" then
-	--if grid is touched
-		local touchX = math.floor((event.x - 32) / 32)
-		local touchY = math.floor((event.y - 60) / 32)
-		if touchX >= 0 and touchX < 8 and
-		touchY >= 0 and touchY < 8 then
-			--check if the space you touched has a friendly unit
-			for i in pairs(level.unit) do
-				if touchX == level.unit[i].posX and touchY == level.unit[i].posY then
-					print ("Unit touched!")
-					currentUnit = i
-					unitMovement = level.unit[i].moves
-					destroyMenu()
-					createMenu(level.unit[i].melee) 
-					break
-				else
-					destroyMenu()
+		--if grid is touched
+		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
+			if moving then
+				selectedUnit:tryMove(touch, level.enemy, level.unit)
+				moving = false
+			elseif menu == nil then
+				--check friendly units for touch
+				for i in pairs(level.unit) do
+					if level.unit[i]:isAt(touch) and not touch.hit then
+						print ("Unit touched!")
+						createMenu(level.unit[i])
+						touch.hit = true
+					end
+				end
+				
+				--check enemy units for touch
+				for i in pairs(level.enemy) do
+					if level.enemy[i]:isAt(touch) and not touch.hit then
+						print ("Enemy unit touched!")
+						touch.hit = true
+					end
 				end
 			end
-			--check if the space you touched has an enemy unit
-			for i in pairs(level.enemy) do
-				if touchX == level.enemy[i].posX and touchY == level.enemy[i].posY then
-					print ("Enemy unit touched!")
-				end
+			
+			if not touch.hit then
+				destroyMenu()
 			end
 		end
 	end
 end
-
-local function moveTouch(event)
-	local i
-	
-	if event.phase == "ended" and moving == true then
-		local check = true
-		local touchX = math.floor((event.x - 32) / 32)
-		local touchY = math.floor((event.y - 60) / 32)
-		if touchX >= 0 and touchX < 8 and
-		touchY >= 0 and touchY < 8 then
-			for i in pairs(level.enemy) do
-				if touchX == level.enemy[i].posX and touchY == level.enemy[i].posY then
-					check = false
-				end
-			end
-			local tempMovement = math.abs(level.unit[currentUnit].posX - touchX) + math.abs(level.unit[currentUnit].posY - touchY)
-			if level.unit[currentUnit].posX - touchX > 0 then
-				level.unit[currentUnit].anim:setSequence("idle_left")
-				level.unit[currentUnit].anim:play()
-			elseif level.unit[currentUnit].posX - touchX < 0 then
-				level.unit[currentUnit].anim:setSequence("idle_right")
-				level.unit[currentUnit].anim:play()
-			end
-			if tempMovement <= unitMovement and check == true then
-				level.unit[currentUnit].posX = touchX
-				level.unit[currentUnit].posY = touchY
-				level.unit[currentUnit].anim.x = (touchX * 32) + 32
-				level.unit[currentUnit].anim.y = (touchY * 32) + 60
-			else
-				if check == false then
-					print ("An enemy is on that square.")
-				else
-					print ("Too far away!")
-				end
-			end
-			moving = false
-		end
-	end
-end
-
-Runtime:addEventListener("enterFrame", onEveryFrame)
-Runtime:addEventListener("touch", handleTouch)
-Runtime:addEventListener("touch", moveTouch)
 
 scene:addEventListener("createScene", scene)
 scene:addEventListener("enterScene", scene)

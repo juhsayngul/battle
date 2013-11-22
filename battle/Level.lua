@@ -1,5 +1,5 @@
 local Board = require( "Board" )
-local BG = require( "BG" )
+-- local BG = require( "BG" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
 
@@ -14,7 +14,7 @@ function Level.new(params)
 	
 	newLevel.group = display.newGroup()
 	
-	newLevel.bg = BG.new(params.bgParams)
+	-- newLevel.bg = BG.new(params.bgParams)
 	newLevel.board = Board.new(params.boardParams)
 	
 	newLevel.unit = getUnits(params.unitParams)
@@ -25,15 +25,23 @@ function Level.new(params)
 	newLevel.group:insert(newLevel.unitGroup)
 	newLevel.group:insert(newLevel.enemyGroup)
 	newLevel.group:insert(newLevel.board.group)
-	newLevel.group:insert(newLevel.bg.group)
+	-- newLevel.group:insert(newLevel.bg.group)
 	
 	newLevel.unitGroup:toBack()
 	newLevel.enemyGroup:toBack()
 	newLevel.board.group:toBack()
-	newLevel.bg.group:toBack()
+	-- newLevel.bg.group:toBack()
 	
 	setmetatable(newLevel, Level)
 	return newLevel
+end
+
+function Level:onEveryFrame(event)
+	-- do nothing
+end
+
+function Level:handleTouch(event)
+	-- do nothing
 end
 
 getUnits = function (params)
