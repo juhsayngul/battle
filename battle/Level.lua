@@ -33,7 +33,7 @@ function scene:createScene(event)
 	board = Board.new(params.boardParams)
 	-- bg = BG.new(params.bgParams)
 	
-	friends = getUnits(params.unitParams)
+	friends = getUnits(params.friendParams)
 	enemies = getUnits(params.enemyParams)
 	friendsGroup = getGroup(friends)
 	enemiesGroup = getGroup(enemies)
@@ -158,7 +158,7 @@ handleTouch = function(event)
 		--if grid is touched
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
 			if moving then
-				selectedUnit:tryMove(touch, friends, enemies)
+				selectedUnit:tryMove(touch, enemies, friends)
 				moving = false
 			elseif menu == nil then
 				--check friendly units for touch

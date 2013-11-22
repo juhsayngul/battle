@@ -33,32 +33,32 @@ local tank = {
 
 local heli = {
 	melee = {
-		atk = 1,
-		def = 1,
+		atk = 5,
+		def = 5,
 		rng = 1,
 	},
 	ranged = {
-		atk = 1,
-		def = 1,
-		rng = 1
+		atk = 5,
+		def = 5,
+		rng = 3
 	},
 	health = 1,
-	moves = 1
+	moves = 5
 }
 
 local cannon = {
 	melee = {
-		atk = 1,
-		def = 1,
+		atk = 5,
+		def = 5,
 		rng = 1
 	},
 	ranged = {
-		atk = 1,
-		def = 1,
-		rng = 1
+		atk = 5,
+		def = 5,
+		rng = 2
 	},
-	health = 1,
-	moves = 1
+	health = 10,
+	moves = 5
 }
 
 local base = {}

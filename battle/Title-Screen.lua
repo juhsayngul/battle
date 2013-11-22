@@ -1,6 +1,25 @@
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 
+local _W, _H = display.contentWidth, display.contentHeight
+local levelParams = {
+	levelName = "Level 1",
+	boardParams = {},
+	bgParams = {pos = {x = 0, y = 0}, length = {x = _W, y = _H}},
+	friendParams = {
+					{unitType = "cannon_f", pos = {x = 0, y = 7}},
+					{unitType = "tank_f", pos = {x = 2, y = 7}},
+					{unitType = "infantry_f", pos = {x = 5, y = 7}},
+					{unitType = "heli_f", pos = {x = 7, y = 7}}
+				},
+	enemyParams = {
+					{unitType = "infantry_e", pos = {x = 7, y = 0}},
+					{unitType = "tank_e", pos = {x = 0, y = 0}}
+				}
+}
+
+local options = {params = levelParams}
+
 function scene:createScene(event)
     local screenGroup = self.view
 end
