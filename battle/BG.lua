@@ -5,7 +5,7 @@ function BG.new(params)
 	local newBG = {}
 	newBG.group = display.newGroup()
 	
-	newBG.shape = display.newRect(params.posX, params.posY, params.x, params.y)
+	newBG.shape = display.newRect(params.pos.x, params.pos.y, params.length.x, params.length.y)
 	newBG.shape:setFillColor(0, 0 , 0)
 	newBG.group:insert(newBG.shape)
 	
