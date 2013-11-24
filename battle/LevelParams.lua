@@ -13,11 +13,15 @@ params["Level-1"] = {
 					{unitType = "cannon_f", pos = {x = 0, y = 7}},
 					{unitType = "tank_f", pos = {x = 2, y = 7}},
 					{unitType = "infantry_f", pos = {x = 5, y = 7}},
-					{unitType = "heli_f", pos = {x = 7, y = 7}}
+					{unitType = "heli_f", pos = {x = 7, y = 7}},
+					{unitType = "cavalry_f", pos = {x = 4, y = 7}}
 				},
 	enemyParams = {
 					{unitType = "infantry_e", pos = {x = 7, y = 0}},
-					{unitType = "tank_e", pos = {x = 0, y = 0}}
+					{unitType = "tank_e", pos = {x = 2, y = 0}},
+					{unitType = "heli_e", pos = {x = 5, y = 0}},
+					{unitType = "cannon_e", pos = {x = 0, y = 0}},
+					{unitType = "cavalry_e", pos = {x = 4, y = 0}}
 				}
 }
 
