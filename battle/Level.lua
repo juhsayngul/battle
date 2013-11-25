@@ -10,9 +10,8 @@ local Level = {}
 Level.__index = Level
 
 local moving = false
-local defending = false
 local cancelled = false
-local switched = false
+local attacking = false
 
 local buttonListener = {}
 local menu = nil
@@ -69,6 +68,7 @@ end
 
 local function createMenu(touchedUnit)
 	selectedUnit = touchedUnit
+	selectedUnit.defending = false
 	menu = Menu.new(buttonListener, selectedUnit)
 end
 
@@ -84,20 +84,20 @@ buttonListener.move = function (event)
 	if event.phase == "ended" then
 		menu.moveText.text = "Where will you move to?"
 		moving = true
+		attacking = false
 	end
 end
 
 buttonListener.switch = function (event)
 	if event.phase == "ended" then
 		selectedUnit:switchAtk()
-		switched = true
 	end
 end
 
 buttonListener.defend = function (event)
 	if event.phase == "ended" then
 		print ("Defending!")
-		defending = true
+		selectedUnit.defending = true
 	end
 end
 
@@ -105,6 +105,7 @@ buttonListener.cancel = function (event)
 	if event.phase == "ended" then
 		print ("Cancelled")
 		cancelled = true
+		attacking = false
 	end
 end
 
@@ -131,14 +132,6 @@ getGroup = function (units)
 end
 
 onEveryFrame = function(event)
-	if switched == true then
-		switched = false
-		destroyMenu()
-	end
-	if defending == true then
-		defending = false
-		destroyMenu()
-	end
 	if cancelled == true then
 		cancelled = false
 		destroyMenu()
@@ -160,6 +153,9 @@ handleTouch = function(event)
 			if moving then
 				selectedUnit:tryMove(touch, enemies, friends)
 				moving = false
+			elseif attacking then
+				selectedUnit:tryAttack(touch, enemies)
+				attacking = false
 			elseif menu == nil then
 				--check friendly units for touch
 				for i in pairs(friends) do
@@ -167,6 +163,8 @@ handleTouch = function(event)
 						print ("Unit touched!")
 						createMenu(friends[i])
 						touch.hit = true
+						print ("Attacking!")
+						attacking = true
 					end
 				end
 				
@@ -181,6 +179,15 @@ handleTouch = function(event)
 			
 			if not touch.hit then
 				destroyMenu()
+			end
+			
+			for i in pairs(enemies) do
+				if enemies[i].toDie then
+					table.remove(enemies, i)
+				end
+				if friends[i].toDie then
+					table.remove(friends, i)
+				end
 			end
 		end
 	end

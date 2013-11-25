@@ -9,10 +9,10 @@ function Menu.new(buttonListener, selectedUnit)
 	newMenu.button.group = display.newGroup()
 	
 	newMenu.button.move = display.newImage("assets/move.png", 32, 325)
-	if selectedUnit.melee == true then
-		newMenu.button.switch = display.newImage("assets/melee.png", 102, 325)
-	else
+	if selectedUnit.atkMelee then
 		newMenu.button.switch = display.newImage("assets/ranged.png", 102, 325)
+	else
+		newMenu.button.switch = display.newImage("assets/melee.png", 102, 325)
 	end
 	newMenu.button.defend = display.newImage("assets/defend.png", 172, 325)
 	newMenu.button.cancel = display.newImage("assets/cancel.png", 242, 325)

@@ -23,7 +23,7 @@ local tank = {
 		rng = 1
 	},
 	ranged = {
-		atk = 5,
+		atk = 10,
 		def = 5,
 		rng = 5
 	},
@@ -53,7 +53,7 @@ local cannon = {
 		rng = 1
 	},
 	ranged = {
-		atk = 5,
+		atk = 10,
 		def = 5,
 		rng = 2
 	},
