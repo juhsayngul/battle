@@ -105,6 +105,7 @@ buttonListener.cancel = function (event)
 	if event.phase == "ended" then
 		print ("Cancelled")
 		cancelled = true
+		moving = false
 		attacking = false
 	end
 end
