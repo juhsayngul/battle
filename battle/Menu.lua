@@ -46,4 +46,17 @@ function Menu:destroy(buttonListener)
 	display.remove(self.group)
 end
 
+function Menu:switch(buttonListener, melee)
+		self.button.switch:removeEventListener("touch", buttonListener.switch)
+		self.button.switch:removeSelf()
+		self.button.switch = nil
+	if melee then
+		self.button.switch = display.newImage("assets/melee.png", 102, 325)
+	else
+		self.button.switch = display.newImage("assets/ranged.png", 102, 325)
+	end
+	self.button.group:insert(newMenu.button.switch)
+	self.button.switch:addEventListener("touch", buttonListener.switch)
+end
+
 return Menu

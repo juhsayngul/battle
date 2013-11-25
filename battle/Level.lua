@@ -90,6 +90,10 @@ end
 
 buttonListener.switch = function (event)
 	if event.phase == "ended" then
+		if selectedUnit.atkMelee and (selectedUnit.stats.live.ranged.atk > 0) or
+		selectedUnit.atkMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
+			menu:switch(buttonListener, selectedUnit.atkMelee)
+		end
 		selectedUnit:switchAtk()
 	end
 end
