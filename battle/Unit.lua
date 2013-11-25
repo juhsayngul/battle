@@ -19,10 +19,13 @@ function Unit.new(params)
 		health = base.health,
 		moves = base.moves
 	}
+	
 	newUnit.pos = {x = params.pos.x, y = params.pos.y}
-	newUnit.atkMelee = newUnit.stats.base.melee.atk >= newUnit.stats.base.ranged.atk
+	newUnit.atkModeIsMelee = newUnit.stats.base.melee.atk >= newUnit.stats.base.ranged.atk
+	newUnit.movModeIsMove = false
 	newUnit.defending = false
 	newUnit.toDie = false
+	
 	newUnit.anim = display.newSprite(imageSheet, properties.sequenceData)
 	newUnit.anim:setReferencePoint(display.TopLeftReferencePoint)
 	newUnit.anim.x = (params.pos.x * 32) + 32
@@ -71,10 +74,10 @@ function Unit:resetMoves()
 end
 
 function Unit:switchAtk()
-	if self.atkMelee and (self.stats.live.ranged.atk > 0) then
-		self.atkMelee = false
+	if self.atkModeIsMelee and (self.stats.live.ranged.atk > 0) then
+		self.atkModeIsMelee = false
 	else
-		self.atkMelee = true
+		self.atkModeIsMelee = true
 	end
 end
 
@@ -83,12 +86,10 @@ function Unit:tryAttack(touch, enemies)
 	local tooFar = false
 	local opposingUnit
 	
-	if self.atkMelee then
+	if self.atkModeIsMelee then
 		tooFar = (self:distanceTo(touch) > self.stats.live.melee.rng)
 	else
 		tooFar = (self:distanceTo(touch) > self.stats.live.ranged.rng)
-		print (self:distanceTo(touch))
-		print (self.stats.live.ranged.rng)
 	end
 	
 	for i in pairs(enemies) do
@@ -105,12 +106,12 @@ function Unit:tryAttack(touch, enemies)
 		print ("The enemy is too far away!")
 	else
 		self.stats.live.moves = self.stats.live.moves - 1
-		if self.atkMelee then
-			opposingUnit:takeDamage(self.atkMelee, self.stats.live.melee.atk)
+		if self.atkModeIsMelee then
+			opposingUnit:takeDamage(self.atkModeIsMelee, self.stats.live.melee.atk)
 		else
-			opposingUnit:takeDamage(self.atkMelee, self.stats.live.ranged.atk)
+			opposingUnit:takeDamage(self.atkModeIsMelee, self.stats.live.ranged.atk)
 		end
-		if opposingUnit.toDie and self.atkMelee then
+		if opposingUnit.toDie and self.atkModeIsMelee then
 			self.pos.x = opposingUnit.pos.x
 			self.pos.y = opposingUnit.pos.y
 			self.anim.x = (opposingUnit.anim.x * 32) + 32

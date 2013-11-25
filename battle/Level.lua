@@ -9,13 +9,12 @@ local scene = storyboard.newScene()
 local Level = {}
 Level.__index = Level
 
-local moving = false
 local cancelled = false
-local attacking = false
 
 local buttonListener = {}
 local menu = nil
-	
+local controlEnemies = false
+
 local friends, enemies
 local selectedUnit
 
@@ -83,16 +82,15 @@ end
 buttonListener.move = function (event)
 	if event.phase == "ended" then
 		menu.moveText.text = "Where will you move to?"
-		moving = true
-		attacking = false
+		selectedUnit.movModeIsMove = true
 	end
 end
 
 buttonListener.switch = function (event)
 	if event.phase == "ended" then
-		if selectedUnit.atkMelee and (selectedUnit.stats.live.ranged.atk > 0) or
-		selectedUnit.atkMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
-			menu:switch(buttonListener, selectedUnit.atkMelee)
+		if selectedUnit.atkModeIsMelee and (selectedUnit.stats.live.ranged.atk > 0) or
+		selectedUnit.atkModeIsMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
+			menu:switch(buttonListener, selectedUnit.atkModeIsMelee)
 		end
 		selectedUnit:switchAtk()
 	end
@@ -109,8 +107,7 @@ buttonListener.cancel = function (event)
 	if event.phase == "ended" then
 		print ("Cancelled")
 		cancelled = true
-		moving = false
-		attacking = false
+		selectedUnit.movModeIsMove = false
 	end
 end
 
@@ -145,6 +142,16 @@ end
 
 handleTouch = function(event)
 	local i
+	local opposition, teammates
+	
+	-- for turns to work later
+	if not controlEnemies then
+		opposition = enemies
+		teammates = friends
+	else
+		opposition = friends
+		teammates = enemies
+	end
 	
 	local touch = {
 		x = math.floor((event.x - 32) / 32),
@@ -155,27 +162,29 @@ handleTouch = function(event)
 	if event.phase == "ended" then
 		--if grid is touched
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
-			if moving then
-				selectedUnit:tryMove(touch, enemies, friends)
-				moving = false
-			elseif attacking then
-				selectedUnit:tryAttack(touch, enemies)
-				attacking = false
+			if selectedUnit ~= nil then
+				if selectedUnit.movModeIsMove then
+					selectedUnit:tryMove(touch, opposition, teammates)
+					selectedUnit.movModeIsMove = false
+				elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
+					selectedUnit:tryAttack(touch, opposition)
+					selectedUnit.movModeIsMove = true
+				end
 			elseif menu == nil then
 				--check friendly units for touch
-				for i in pairs(friends) do
-					if friends[i]:isAt(touch) and not touch.hit then
+				for i in pairs(teammates) do
+					if teammates[i]:isAt(touch) and not touch.hit then
 						print ("Unit touched!")
-						createMenu(friends[i])
+						createMenu(teammates[i])
 						touch.hit = true
 						print ("Attacking!")
-						attacking = true
+						selectedUnit.movModeIsMove = false
 					end
 				end
 				
 				--check enemy units for touch
-				for i in pairs(enemies) do
-					if enemies[i]:isAt(touch) and not touch.hit then
+				for i in pairs(opposition) do
+					if opposition[i]:isAt(touch) and not touch.hit then
 						print ("Enemy unit touched!")
 						touch.hit = true
 					end
@@ -186,12 +195,12 @@ handleTouch = function(event)
 				destroyMenu()
 			end
 			
-			for i in pairs(enemies) do
-				if enemies[i].toDie then
-					table.remove(enemies, i)
+			for i in pairs(opposition) do
+				if opposition[i].toDie then
+					table.remove(opposition, i)
 				end
-				if friends[i].toDie then
-					table.remove(friends, i)
+				if teammates[i].toDie then
+					table.remove(teammates, i)
 				end
 			end
 		end
