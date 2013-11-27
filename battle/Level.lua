@@ -79,10 +79,19 @@ local function destroyMenu()
 	menu = nil
 end
 
+buttonListener.attack = function (event)
+	if event.phase == "ended" then
+		menu.moveText.text = "Attack whom?"
+		selectedUnit.movModeIsMove = false
+		menu:switchToMove(buttonListener)
+	end
+end
+
 buttonListener.move = function (event)
 	if event.phase == "ended" then
 		menu.moveText.text = "Where will you move to?"
 		selectedUnit.movModeIsMove = true
+		menu:switchToAttack(buttonListener)
 	end
 end
 
@@ -108,6 +117,7 @@ buttonListener.cancel = function (event)
 		print ("Cancelled")
 		cancelled = true
 		selectedUnit.movModeIsMove = false
+		print("Attacking!")
 	end
 end
 
@@ -177,8 +187,8 @@ handleTouch = function(event)
 						print ("Unit touched!")
 						createMenu(teammates[i])
 						touch.hit = true
-						print ("Attacking!")
-						selectedUnit.movModeIsMove = false
+						print ("Moving!")
+						selectedUnit.movModeIsMove = true
 					end
 				end
 				
