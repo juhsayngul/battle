@@ -7,10 +7,8 @@ function GUI.new(buttonListener, selectedUnit)
 	
 	newGUI.button = {}
 	newGUI.button.group = display.newGroup()
-	
-	-- temporarily a circle until we have a graphic
-	newGUI.button.pause = display.newCircle(64, 430, 32)
-	newGUI.button.pause:setFillColor(255, 0, 0)
+
+	newGUI.button.pause = display.newImage("assets/pause_button.png", 32, 450)
 	
 	newGUI.button.pause:addEventListener("touch", buttonListener.pause)
 	
