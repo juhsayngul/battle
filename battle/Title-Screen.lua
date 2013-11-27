@@ -34,7 +34,9 @@ function scene:exitScene(event)
 end
 
 startTouch = function(event)
-	storyboard.gotoScene("Level", options)
+	if event.phase == "began" then
+		storyboard.gotoScene("Level", options)
+	end
 end
 
 scene:addEventListener("createScene", scene)

@@ -3,6 +3,7 @@ local storyboard = require( "storyboard" )
 -- local BG = require( "BG" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
+local GUI = require ("GUI")
 
 local scene = storyboard.newScene()
 
@@ -10,6 +11,7 @@ local Level = {}
 Level.__index = Level
 
 local cancelled = false
+local gamePaused = false
 
 local buttonListener = {}
 local menu = nil
@@ -24,12 +26,13 @@ function scene:createScene(event)
     local screenGroup = self.view
 	
 	local params = event.params
-	local bg, board, friendsGroup, enemiesGroup
+	local bg, board, friendsGroup, enemiesGroup, gui
 	
 	levelGroup = display.newGroup()
 	
 	board = Board.new(params.boardParams)
 	-- bg = BG.new(params.bgParams)
+	gui = GUI.new(buttonListener)
 	
 	friends = getUnits(params.friendParams)
 	enemies = getUnits(params.enemyParams)
@@ -40,7 +43,9 @@ function scene:createScene(event)
 	levelGroup:insert(enemiesGroup)
 	levelGroup:insert(board.group)
 	-- levelGroup:insert(bg.group)
+	levelGroup:insert(gui.group)
 	
+	gui.group:toBack()
 	friendsGroup:toBack()
 	enemiesGroup:toBack()
 	board.group:toBack()
@@ -65,10 +70,36 @@ function scene:exitScene(event)
     Runtime:removeEventListener("touch", handleTouch)
 end
 
+function scene:overlayBegan( event )
+	local i
+	if gamePaused then
+		for i in pairs(friends) do
+			friends[i].anim:pause()
+		end
+		for i in pairs(enemies) do
+			enemies[i].anim:pause()
+		end
+	end
+end
+
+function scene:overlayEnded( event )
+	local i
+	if gamePaused then
+		gamePaused = false
+		for i in pairs(friends) do
+			friends[i].anim:play()
+		end
+		for i in pairs(enemies) do
+			enemies[i].anim:play()
+		end
+	end
+end
+
 local function createMenu(touchedUnit)
 	selectedUnit = touchedUnit
 	selectedUnit.defending = false
 	menu = Menu.new(buttonListener, selectedUnit)
+	scene.view:insert(menu.group)
 end
 
 local function destroyMenu()
@@ -80,7 +111,7 @@ local function destroyMenu()
 end
 
 buttonListener.attack = function (event)
-	if event.phase == "ended" then
+	if event.phase == "began" then
 		menu.moveText.text = "Attack whom?"
 		selectedUnit.movModeIsMove = false
 		menu:switchToMove(buttonListener)
@@ -88,7 +119,7 @@ buttonListener.attack = function (event)
 end
 
 buttonListener.move = function (event)
-	if event.phase == "ended" then
+	if event.phase == "began" then
 		menu.moveText.text = "Where will you move to?"
 		selectedUnit.movModeIsMove = true
 		menu:switchToAttack(buttonListener)
@@ -96,7 +127,7 @@ buttonListener.move = function (event)
 end
 
 buttonListener.switch = function (event)
-	if event.phase == "ended" then
+	if event.phase == "began" then
 		if selectedUnit.atkModeIsMelee and (selectedUnit.stats.live.ranged.atk > 0) or
 		selectedUnit.atkModeIsMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
 			menu:switch(buttonListener, selectedUnit.atkModeIsMelee)
@@ -106,18 +137,31 @@ buttonListener.switch = function (event)
 end
 
 buttonListener.defend = function (event)
-	if event.phase == "ended" then
+	if event.phase == "began" then
 		print ("Defending!")
 		selectedUnit.defending = true
 	end
 end
 
 buttonListener.cancel = function (event)
-	if event.phase == "ended" then
+	if event.phase == "began" then
 		print ("Cancelled")
 		cancelled = true
 		selectedUnit.movModeIsMove = false
-		print("Attacking!")
+		print ("Attacking!")
+	end
+end
+
+buttonListener.pause = function (event)
+	if event.phase == "began" and not gamePaused then
+		gamePaused = true
+		local options = {
+			effect = "fromBottom",
+			time = 300,
+			params = {},
+			isModal = true
+		}
+		storyboard.showOverlay("Pause-Overlay", options)
 	end
 end
 
@@ -169,7 +213,7 @@ handleTouch = function(event)
 		hit = false
 	}
 	
-	if event.phase == "ended" then
+	if event.phase == "began" then
 		--if grid is touched
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
 			if selectedUnit ~= nil then
@@ -220,5 +264,7 @@ end
 scene:addEventListener("createScene", scene)
 scene:addEventListener("enterScene", scene)
 scene:addEventListener("exitScene", scene)
+scene:addEventListener("overlayBegan")
+scene:addEventListener("overlayEnded")
 
 return scene

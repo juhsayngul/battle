@@ -37,7 +37,6 @@ function Menu.new(buttonListener, selectedUnit)
 end
 
 function Menu:destroy(buttonListener)
-	
 	if self.button.attack ~= nil then
 		self.button.attack:removeEventListener("touch", buttonListener.attack)
 	end
@@ -51,10 +50,28 @@ function Menu:destroy(buttonListener)
 	display.remove(self.group)
 end
 
+function Menu:switchToMove(buttonListener)
+	self.button.attack:removeEventListener("touch", buttonListener.attack)
+	self.button.attack:removeSelf()
+	self.button.attack = nil
+	self.button.move = display.newImage("assets/move.png", 32, 325)
+	self.button.group:insert(self.button.move)
+	self.button.move:addEventListener("touch", buttonListener.move)
+end
+
+function Menu:switchToAttack(buttonListener)
+	self.button.move:removeEventListener("touch", buttonListener.move)
+	self.button.move:removeSelf()
+	self.button.move = nil
+	self.button.attack = display.newImage("assets/attack.png", 32, 325)
+	self.button.group:insert(self.button.attack)
+	self.button.attack:addEventListener("touch", buttonListener.attack)
+end
+
 function Menu:switch(buttonListener, melee)
-		self.button.switch:removeEventListener("touch", buttonListener.switch)
-		self.button.switch:removeSelf()
-		self.button.switch = nil
+	self.button.switch:removeEventListener("touch", buttonListener.switch)
+	self.button.switch:removeSelf()
+	self.button.switch = nil
 	if melee then
 		self.button.switch = display.newImage("assets/melee.png", 102, 325)
 	else
