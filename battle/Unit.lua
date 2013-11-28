@@ -37,7 +37,7 @@ function Unit.new(params)
 	return newUnit
 end
 
-function Unit:tryMove(touch, enemies, friends)
+function Unit:tryMove(touch, enemies, friends, gamestate)
 	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
 	local isEnemyHere, isFriendHere = false, false
 	
@@ -65,12 +65,13 @@ function Unit:tryMove(touch, enemies, friends)
 	end
 	
 	if self.stats.live.moves == 0 then
-		self:resetMoves()
+		self:resetMoves(gamestate)
 	end
 end
 
-function Unit:resetMoves()
+function Unit:resetMoves(gamestate)
 	self.stats.live.moves = self.stats.base.moves
+	gamestate:switch()
 end
 
 function Unit:switchAtk()
@@ -81,7 +82,7 @@ function Unit:switchAtk()
 	end
 end
 
-function Unit:tryAttack(touch, enemies)
+function Unit:tryAttack(touch, enemies, gamestate)
 	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
 	local tooFar = false
 	local opposingUnit
@@ -120,7 +121,7 @@ function Unit:tryAttack(touch, enemies)
 	end
 	
 	if self.stats.live.moves == 0 then
-		self:resetMoves()
+		self:resetMoves(gamestate)
 	end
 end
 

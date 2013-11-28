@@ -4,6 +4,7 @@ local storyboard = require( "storyboard" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
 local GUI = require ("GUI")
+local GameState = require("GameState")
 
 local scene = storyboard.newScene()
 
@@ -33,6 +34,7 @@ function scene:createScene(event)
 	board = Board.new(params.boardParams)
 	-- bg = BG.new(params.bgParams)
 	gui = GUI.new(buttonListener)
+	gamestate = GameState.init()
 	
 	friends = getUnits(params.friendParams)
 	enemies = getUnits(params.enemyParams)
@@ -148,7 +150,6 @@ buttonListener.cancel = function (event)
 		print ("Cancelled")
 		cancelled = true
 		selectedUnit.movModeIsMove = false
-		print ("Attacking!")
 	end
 end
 
@@ -218,10 +219,10 @@ handleTouch = function(event)
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
 			if selectedUnit ~= nil then
 				if selectedUnit.movModeIsMove then
-					selectedUnit:tryMove(touch, opposition, teammates)
+					selectedUnit:tryMove(touch, opposition, teammates, gamestate)
 					selectedUnit.movModeIsMove = false
 				elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
-					selectedUnit:tryAttack(touch, opposition)
+					selectedUnit:tryAttack(touch, opposition, gamestate)
 					selectedUnit.movModeIsMove = true
 				end
 			elseif menu == nil then
