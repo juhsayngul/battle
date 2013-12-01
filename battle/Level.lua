@@ -199,6 +199,12 @@ handleTouch = function(event)
 	local i
 	local opposition, teammates
 	
+	if gamestate.isOrangeTurn == false then
+		controlEnemies = true
+	else
+		controlEnemies = false
+	end
+	
 	-- for turns to work later
 	if not controlEnemies then
 		opposition = enemies
@@ -254,6 +260,8 @@ handleTouch = function(event)
 				if opposition[i].toDie then
 					table.remove(opposition, i)
 				end
+			end
+			for i in pairs(teammates) do
 				if teammates[i].toDie then
 					table.remove(teammates, i)
 				end
