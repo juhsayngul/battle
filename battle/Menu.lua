@@ -8,22 +8,28 @@ function Menu.new(buttonListener, selectedUnit)
 	newMenu.button = {}
 	newMenu.button.group = display.newGroup()
 	
-	newMenu.button.attack = display.newImage("assets/attack.png", 32, 325)
-	if selectedUnit.atkModeIsMelee then
-		newMenu.button.switch = display.newImage("assets/ranged.png", 102, 325)
+	if selectedUnit.movModeIsMove then
+		newMenu.button.switchMov = display.newImage("assets/attack.png", 32, 325)
 	else
-		newMenu.button.switch = display.newImage("assets/melee.png", 102, 325)
+		newMenu.button.switchMov = display.newImage("assets/move.png", 32, 325)
 	end
+	
+	if selectedUnit.atkModeIsMelee then
+		newMenu.button.switchAtk = display.newImage("assets/ranged.png", 102, 325)
+	else
+		newMenu.button.switchAtk = display.newImage("assets/melee.png", 102, 325)
+	end
+	
 	newMenu.button.defend = display.newImage("assets/defend.png", 172, 325)
 	newMenu.button.cancel = display.newImage("assets/cancel.png", 242, 325)
 	
-	newMenu.button.attack:addEventListener("touch", buttonListener.attack)
-	newMenu.button.switch:addEventListener("touch", buttonListener.switch)
+	newMenu.button.switchMov:addEventListener("touch", buttonListener.switchMov)
+	newMenu.button.switchAtk:addEventListener("touch", buttonListener.switchAtk)
 	newMenu.button.defend:addEventListener("touch", buttonListener.defend)
 	newMenu.button.cancel:addEventListener("touch", buttonListener.cancel)
 	
-	newMenu.button.group:insert(newMenu.button.attack)
-	newMenu.button.group:insert(newMenu.button.switch)
+	newMenu.button.group:insert(newMenu.button.switchMov)
+	newMenu.button.group:insert(newMenu.button.switchAtk)
 	newMenu.button.group:insert(newMenu.button.defend)
 	newMenu.button.group:insert(newMenu.button.cancel)
 	
@@ -37,66 +43,40 @@ function Menu.new(buttonListener, selectedUnit)
 end
 
 function Menu:destroy(buttonListener)
-	if self.button.attack ~= nil then
-		self.button.attack:removeEventListener("touch", buttonListener.attack)
-	end
-	if self.button.move ~= nil then
-		self.button.move:removeEventListener("touch", buttonListener.move)
-	end
-	self.button.switch:removeEventListener("touch", buttonListener.switch)
+	self.button.switchMov:removeEventListener("touch", buttonListener.switchMov)
+	self.button.switchAtk:removeEventListener("touch", buttonListener.switchAtk)
 	self.button.defend:removeEventListener("touch", buttonListener.defend)
 	self.button.cancel:removeEventListener("touch", buttonListener.cancel)
 	
 	display.remove(self.group)
 end
 
-function Menu:switchToMove(buttonListener)
-	self.button.attack:removeEventListener("touch", buttonListener.attack)
-	self.button.attack:removeSelf()
-	self.button.attack = nil
-	self.button.move = display.newImage("assets/move.png", 32, 325)
-	self.button.group:insert(self.button.move)
-	self.button.move:addEventListener("touch", buttonListener.move)
-end
-
-function Menu:switchToAttack(buttonListener)
-	self.button.move:removeEventListener("touch", buttonListener.move)
-	self.button.move:removeSelf()
-	self.button.move = nil
-	self.button.attack = display.newImage("assets/attack.png", 32, 325)
-	self.button.group:insert(self.button.attack)
-	self.button.attack:addEventListener("touch", buttonListener.attack)
-end
-
-function Menu:switch(buttonListener, melee)
-	self.button.switch:removeEventListener("touch", buttonListener.switch)
-	self.button.switch:removeSelf()
-	self.button.switch = nil
-	if melee then
-		self.button.switch = display.newImage("assets/melee.png", 102, 325)
+function Menu:switchMov(buttonListener, move)
+	self.button.switchMov:removeEventListener("touch", buttonListener.switchMov)
+	self.button.switchMov:removeSelf()
+	self.button.switchMov = nil
+	if move then
+		self.moveText.text = "Where will you move to?"
+		self.button.switchMov = display.newImage("assets/attack.png", 32, 325)
 	else
-		self.button.switch = display.newImage("assets/ranged.png", 102, 325)
+		self.moveText.text = "Attack whom"
+		self.button.switchMov = display.newImage("assets/move.png", 32, 325)
 	end
-	self.button.group:insert(newMenu.button.switch)
-	self.button.switch:addEventListener("touch", buttonListener.switch)
+	self.button.group:insert(newMenu.button.switchMov)
+	self.button.switchMov:addEventListener("touch", buttonListener.switchMov)
 end
 
-function Menu:switchToMove(buttonListener)
-	self.button.attack:removeEventListener("touch", buttonListener.attack)
-	self.button.attack:removeSelf()
-	self.button.attack = nil
-	self.button.move = display.newImage("assets/move.png", 32, 325)
-	self.button.group:insert(newMenu.button.move)
-	self.button.move:addEventListener("touch", buttonListener.move)
-end
-
-function Menu:switchToAttack(buttonListener)
-	self.button.move:removeEventListener("touch", buttonListener.attack)
-	self.button.move:removeSelf()
-	self.button.move = nil
-	self.button.attack = display.newImage("assets/attack.png", 32, 325)
-	self.button.group:insert(newMenu.button.attack)
-	self.button.attack:addEventListener("touch", buttonListener.attack)
+function Menu:switchAtk(buttonListener, melee)
+	self.button.switchAtk:removeEventListener("touch", buttonListener.switchAtk)
+	self.button.switchAtk:removeSelf()
+	self.button.switchAtk = nil
+	if melee then
+		self.button.switchAtk = display.newImage("assets/melee.png", 102, 325)
+	else
+		self.button.switchAtk = display.newImage("assets/ranged.png", 102, 325)
+	end
+	self.button.group:insert(newMenu.button.switchAtk)
+	self.button.switchAtk:addEventListener("touch", buttonListener.switchAtk)
 end
 
 return Menu

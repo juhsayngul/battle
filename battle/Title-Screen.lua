@@ -3,14 +3,15 @@ local LevelParams = require("LevelParams")
 
 local scene = storyboard.newScene()
 
-local options = {
-	effect = "slideUp",
-	time = 300,
-	params = LevelParams.getLevelParams("Level-1")
-}
+local options
 
 local salute, startButton
-local startTouch
+local startTouch, loadLevel
+
+local removeLevelScene = false
+local currentLevel
+
+local loadLevel, saveLevel
 
 function scene:createScene(event)
     local screenGroup = self.view
@@ -24,6 +25,17 @@ end
 function scene:enterScene(event)
     local screenGroup = self.view
 	
+	if (event.params) then
+		if (event.params.proceed) then
+			saveLevel(event.params.nextLevelName)
+			removeLevelScene = true
+		end
+	end
+	
+	if removeLevelScene then
+		storyboard.removeScene("Level")
+	end
+	
 	startButton:addEventListener("touch", startTouch)
 end
 
@@ -34,9 +46,25 @@ function scene:exitScene(event)
 end
 
 startTouch = function(event)
-	if event.phase == "ended" then
+	if event.phase == "began" then
+		options = {
+			effect = "slideUp",
+			time = 300,
+			params = LevelParams.getLevelParams(loadLevel())
+		}
 		storyboard.gotoScene("Level", options)
 	end
+end
+
+loadLevel = function()
+	if (currentLevel == nil) then
+		currentLevel = "Level-1"
+	end
+	return currentLevel
+end
+
+saveLevel = function(nextLevel)
+	currentLevel = nextLevel
 end
 
 scene:addEventListener("createScene", scene)

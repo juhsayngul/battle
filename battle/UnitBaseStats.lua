@@ -4,73 +4,73 @@ UnitBaseStats.__index = UnitBaseStats
 local infantry = {
 	melee = {
 		atk = 5,
-		def = 5,
+		def = 3,
 		rng = 1
 	},
 	ranged = {
 		atk = 0,
-		def = 5,
+		def = 1,
 		rng = 0
 	},
-	health = 5,
-	moves = 5
+	health = 4,
+	moves = 3
 }
 
 local tank = {
 	melee = {
-		atk = 5,
-		def = 5,
+		atk = 4,
+		def = 4,
 		rng = 1
 	},
 	ranged = {
-		atk = 10,
-		def = 5,
-		rng = 5
+		atk = 5,
+		def = 3,
+		rng = 3
 	},
 	health = 5,
-	moves = 5
+	moves = 2
 }
 
 local heli = {
 	melee = {
-		atk = 5,
-		def = 5,
+		atk = 0,
+		def = 10,
 		rng = 1,
 	},
 	ranged = {
-		atk = 5,
-		def = 5,
-		rng = 3
+		atk = 4,
+		def = 0,
+		rng = 5
 	},
-	health = 1,
+	health = 3,
 	moves = 5
 }
 
 local cannon = {
 	melee = {
-		atk = 5,
-		def = 5,
+		atk = 0,
+		def = 0,
 		rng = 1
 	},
 	ranged = {
 		atk = 10,
-		def = 5,
-		rng = 2
+		def = 2,
+		rng = 5
 	},
-	health = 10,
-	moves = 5
+	health = 5,
+	moves = 2
 }
 
 local cavalry = {
 	melee = {
-		atk = 5,
-		def = 5,
+		atk = 10,
+		def = 1,
 		rng = 1
 	},
 	ranged = {
 		atk = 5,
-		def = 5,
-		rng = 2
+		def = 3,
+		rng = 3
 	},
 	health = 10,
 	moves = 5

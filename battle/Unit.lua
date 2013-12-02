@@ -22,7 +22,7 @@ function Unit.new(params)
 	
 	newUnit.pos = {x = params.pos.x, y = params.pos.y}
 	newUnit.atkModeIsMelee = newUnit.stats.base.melee.atk >= newUnit.stats.base.ranged.atk
-	newUnit.movModeIsMove = false
+	newUnit.movModeIsMove = true
 	newUnit.defending = false
 	newUnit.toDie = false
 	
@@ -37,7 +37,7 @@ function Unit.new(params)
 	return newUnit
 end
 
-function Unit:tryMove(touch, enemies, friends, gamestate)
+function Unit:tryMove(touch, enemies, friends)
 	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
 	local isEnemyHere, isFriendHere = false, false
 	
@@ -63,15 +63,10 @@ function Unit:tryMove(touch, enemies, friends, gamestate)
 		self.anim.x = (touch.x * 32) + 32
 		self.anim.y = (touch.y * 32) + 60
 	end
-	
-	if self.stats.live.moves == 0 then
-		self:resetMoves(gamestate)
-	end
 end
 
-function Unit:resetMoves(gamestate)
+function Unit:resetMoves()
 	self.stats.live.moves = self.stats.base.moves
-	gamestate:switch()
 end
 
 function Unit:switchAtk()
@@ -82,7 +77,15 @@ function Unit:switchAtk()
 	end
 end
 
-function Unit:tryAttack(touch, enemies, gamestate)
+function Unit:switchMov()
+	if self.movModeIsMove then
+		self.movModeIsMove = false
+	else
+		self.movModeIsMove = true
+	end
+end
+
+function Unit:tryAttack(touch, enemies)
 	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
 	local tooFar = false
 	local opposingUnit
@@ -112,16 +115,6 @@ function Unit:tryAttack(touch, enemies, gamestate)
 		else
 			opposingUnit:takeDamage(self.atkModeIsMelee, self.stats.live.ranged.atk)
 		end
-		if opposingUnit.toDie and self.atkModeIsMelee then
-			self.pos.x = opposingUnit.pos.x
-			self.pos.y = opposingUnit.pos.y
-			self.anim.x = (opposingUnit.anim.x * 32) + 32
-			self.anim.y = (opposingUnit.anim.y * 32) + 60
-		end
-	end
-	
-	if self.stats.live.moves == 0 then
-		self:resetMoves(gamestate)
 	end
 end
 
@@ -161,6 +154,16 @@ end
 
 function Unit:isAt(loc)
 	return (self:distanceTo(loc) == 0)
+end
+
+function Unit:resetDefending()
+	self.defending = false
+end
+
+function Unit:defend()
+	print ("Defending!")
+	self.defending = true
+	self.stats.live.moves = 0
 end
 
 return Unit

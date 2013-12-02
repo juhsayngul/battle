@@ -4,7 +4,6 @@ local storyboard = require( "storyboard" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
 local GUI = require ("GUI")
-local GameState = require("GameState")
 
 local scene = storyboard.newScene()
 
@@ -16,10 +15,12 @@ local gamePaused = false
 
 local buttonListener = {}
 local menu = nil
-local controlEnemies = false
+local isOrangeTurn = true
 
 local friends, enemies
 local selectedUnit
+
+local levelParams
 
 local getUnits, getGroup, onEveryFrame, handleTouch
 
@@ -27,14 +28,14 @@ function scene:createScene(event)
     local screenGroup = self.view
 	
 	local params = event.params
+	levelParams = params
 	local bg, board, friendsGroup, enemiesGroup, gui
 	
 	levelGroup = display.newGroup()
 	
 	board = Board.new(params.boardParams)
-	-- bg = BG.new(params.bgParams)
 	gui = GUI.new(buttonListener)
-	gamestate = GameState.init()
+	-- bg = BG.new(params.bgParams)
 	
 	friends = getUnits(params.friendParams)
 	enemies = getUnits(params.enemyParams)
@@ -44,8 +45,8 @@ function scene:createScene(event)
 	levelGroup:insert(friendsGroup)
 	levelGroup:insert(enemiesGroup)
 	levelGroup:insert(board.group)
-	-- levelGroup:insert(bg.group)
 	levelGroup:insert(gui.group)
+	-- levelGroup:insert(bg.group)
 	
 	gui.group:toBack()
 	friendsGroup:toBack()
@@ -59,7 +60,7 @@ end
 function scene:enterScene(event)
     local screenGroup = self.view
 	
-    storyboard.removeScene("Title-Screen")
+    -- storyboard.removeScene("Title-Screen")
 	
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 	Runtime:addEventListener("touch", handleTouch)
@@ -73,8 +74,8 @@ function scene:exitScene(event)
 end
 
 function scene:overlayBegan( event )
-	local i
 	if gamePaused then
+		local i
 		for i in pairs(friends) do
 			friends[i].anim:pause()
 		end
@@ -85,8 +86,8 @@ function scene:overlayBegan( event )
 end
 
 function scene:overlayEnded( event )
-	local i
 	if gamePaused then
+		local i
 		gamePaused = false
 		for i in pairs(friends) do
 			friends[i].anim:play()
@@ -112,27 +113,46 @@ local function destroyMenu()
 	menu = nil
 end
 
-buttonListener.attack = function (event)
-	if event.phase == "began" then
-		menu.moveText.text = "Attack whom?"
-		selectedUnit.movModeIsMove = false
-		menu:switchToMove(buttonListener)
+local function win()
+	local options = {
+		effect = "fromBottom",
+		time = 300,
+		params = levelParams,
+		isModal = true
+	}
+	storyboard.showOverlay("Win-Overlay", options)
+end
+
+local function lose()
+	local options = {
+		effect = "fromBottom",
+		time = 300,
+		params = levelParams,
+		isModal = true
+	}
+	storyboard.showOverlay("Lose-Overlay", options)
+end
+
+local function checkIfEnded()
+	if #enemies < 1 then
+		win()
+	elseif #friends < 1 then
+		lose()
 	end
 end
 
-buttonListener.move = function (event)
+buttonListener.switchMov = function (event)
 	if event.phase == "began" then
-		menu.moveText.text = "Where will you move to?"
-		selectedUnit.movModeIsMove = true
-		menu:switchToAttack(buttonListener)
+		selectedUnit:switchMov()
+		menu:switchMov(buttonListener, selectedUnit.movModeIsMove)
 	end
 end
 
-buttonListener.switch = function (event)
+buttonListener.switchAtk = function (event)
 	if event.phase == "began" then
 		if selectedUnit.atkModeIsMelee and (selectedUnit.stats.live.ranged.atk > 0) or
 		selectedUnit.atkModeIsMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
-			menu:switch(buttonListener, selectedUnit.atkModeIsMelee)
+			menu:switchAtk(buttonListener, selectedUnit.atkModeIsMelee)
 		end
 		selectedUnit:switchAtk()
 	end
@@ -140,8 +160,7 @@ end
 
 buttonListener.defend = function (event)
 	if event.phase == "began" then
-		print ("Defending!")
-		selectedUnit.defending = true
+		selectedUnit:defend()
 	end
 end
 
@@ -149,7 +168,6 @@ buttonListener.cancel = function (event)
 	if event.phase == "began" then
 		print ("Cancelled")
 		cancelled = true
-		selectedUnit.movModeIsMove = false
 	end
 end
 
@@ -159,7 +177,7 @@ buttonListener.pause = function (event)
 		local options = {
 			effect = "fromBottom",
 			time = 300,
-			params = {},
+			params = levelParams,
 			isModal = true
 		}
 		storyboard.showOverlay("Pause-Overlay", options)
@@ -189,9 +207,38 @@ getGroup = function (units)
 end
 
 onEveryFrame = function(event)
-	if cancelled == true then
+	if (selectedUnit ~= nil) then
+		if (selectedUnit.stats.live.moves == 0) then
+			cancelled = true
+			local i
+			if isOrangeTurn then
+				isOrangeTurn = false
+				for i in pairs(enemies) do
+					enemies[i]:resetDefending()
+					enemies[i]:resetMoves()
+				end
+			else
+				isOrangeTurn = true
+				for i in pairs(friends) do
+					friends[i]:resetDefending()
+					friends[i]:resetMoves()
+				end
+			end
+		end
+	end
+	if cancelled then
 		cancelled = false
-		destroyMenu()
+		
+		if (selectedUnit ~= nil) then
+			if (selectedUnit.stats.base.moves == selectedUnit.stats.live.moves) or (selectedUnit.stats.live.moves == 0) then
+				destroyMenu()
+			else
+				print "Can't cancel. Unit already used."
+				local unit = selectedUnit
+				destroyMenu()
+				createMenu(unit)
+			end
+		end
 	end
 end
 
@@ -199,17 +246,10 @@ handleTouch = function(event)
 	local i
 	local opposition, teammates
 	
-	if gamestate.isOrangeTurn == false then
-		controlEnemies = true
-	else
-		controlEnemies = false
-	end
+	opposition = enemies
+	teammates = friends
 	
-	-- for turns to work later
-	if not controlEnemies then
-		opposition = enemies
-		teammates = friends
-	else
+	if not isOrangeTurn then
 		opposition = friends
 		teammates = enemies
 	end
@@ -225,11 +265,9 @@ handleTouch = function(event)
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
 			if selectedUnit ~= nil then
 				if selectedUnit.movModeIsMove then
-					selectedUnit:tryMove(touch, opposition, teammates, gamestate)
-					selectedUnit.movModeIsMove = false
+					selectedUnit:tryMove(touch, opposition, teammates)
 				elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
-					selectedUnit:tryAttack(touch, opposition, gamestate)
-					selectedUnit.movModeIsMove = true
+					selectedUnit:tryAttack(touch, opposition)
 				end
 			elseif menu == nil then
 				--check friendly units for touch
@@ -238,8 +276,6 @@ handleTouch = function(event)
 						print ("Unit touched!")
 						createMenu(teammates[i])
 						touch.hit = true
-						print ("Moving!")
-						selectedUnit.movModeIsMove = true
 					end
 				end
 				
@@ -253,7 +289,7 @@ handleTouch = function(event)
 			end
 			
 			if not touch.hit then
-				destroyMenu()
+				cancelled = true
 			end
 			
 			for i in pairs(opposition) do
@@ -266,6 +302,8 @@ handleTouch = function(event)
 					table.remove(teammates, i)
 				end
 			end
+			
+			checkIfEnded()
 		end
 	end
 end
