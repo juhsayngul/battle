@@ -3,6 +3,7 @@ local storyboard = require( "storyboard" )
 -- local BG = require( "BG" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
+local StatsOverlay = require ("StatsOverlay")
 local GUI = require ("GUI")
 
 local scene = storyboard.newScene()
@@ -15,6 +16,7 @@ local gamePaused = false
 
 local buttonListener = {}
 local menu = nil
+local stats = nil
 local isOrangeTurn = true
 
 local friends, enemies
@@ -102,13 +104,19 @@ local function createMenu(touchedUnit)
 	selectedUnit = touchedUnit
 	selectedUnit.defending = false
 	menu = Menu.new(buttonListener, selectedUnit)
+	stats = StatsOverlay.new(selectedUnit)
 	scene.view:insert(menu.group)
+	scene.view:insert(stats.group)
 end
 
 local function destroyMenu()
 	if menu ~= nil then
 		menu:destroy(buttonListener)
 	end
+	if stats ~= nil then
+		stats:destroy()
+	end
+	stats = nil
 	selectedUnit = nil
 	menu = nil
 end
