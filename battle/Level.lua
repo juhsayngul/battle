@@ -161,6 +161,7 @@ buttonListener.switchAtk = function (event)
 		if selectedUnit.atkModeIsMelee and (selectedUnit.stats.live.ranged.atk > 0) or
 		selectedUnit.atkModeIsMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
 			menu:switchAtk(buttonListener, selectedUnit.atkModeIsMelee)
+			stats:update(selectedUnit)
 		end
 		selectedUnit:switchAtk()
 	end
