@@ -32,6 +32,8 @@ function Unit.new(params)
 	newUnit.anim.y = (params.pos.y * 32) + 60
 	newUnit.anim:play()
 	newUnit.group = display.newGroup()
+	newUnit.imageGroup = {}
+	newUnit.imageGroup = display.newGroup()
 	
 	setmetatable(newUnit, Unit)
 	return newUnit
@@ -157,11 +159,19 @@ function Unit:isAt(loc)
 end
 
 function Unit:resetDefending()
+	if self.defendImage ~= nil then
+		display.remove(self.defendImage)
+	end
+	self.defendImage = nil
 	self.defending = false
 end
 
 function Unit:defend()
 	print ("Defending!")
+	if self.defendImage == nil then
+		self.defendImage = display.newImage("assets/defend_symbol.png", self.anim.x, self.anim.y)
+		self.imageGroup:insert(self.defendImage)
+	end
 	self.defending = true
 	self.stats.live.moves = 0
 end
