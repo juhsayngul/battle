@@ -18,6 +18,7 @@ local waitForAni = false
 local buttonListener = {}
 local menu = nil
 local stats = nil
+local enemystats = nil
 local isOrangeTurn = true
 
 local gui, board
@@ -329,6 +330,14 @@ handleTouch = function(event)
 				--check enemy units for touch
 				for i in pairs(opposition) do
 					if opposition[i]:isAt(touch) and not touch.hit then
+						if stats ~= nil then
+							stats:destroy()
+						end
+						if enemystats ~= nil then
+							enemystats:destroy()
+						end
+						enemystats = StatsOverlay:enemyStats(opposition[i])
+						scene.view:insert(enemystats.group)
 						touch.hit = true
 					end
 				end
@@ -336,6 +345,9 @@ handleTouch = function(event)
 			
 			if not touch.hit then
 				cancelled = true
+				if enemystats ~= nil then
+					enemystats:destroy()
+				end
 			end
 			
 			for i in pairs(opposition) do

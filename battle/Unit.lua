@@ -187,7 +187,7 @@ flashDamageAmount = function(targetedUnit, damageAmount)
 	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random() * (36 - 20)) + 60 - 16 
 	local text = display.newText("-" .. damageAmount, animationLocX, animationLocY, native.systemFontBold, 16)
 	-- rough positioning and text parameters but it works and looks neat enough
-	text:setTextColor(255, 0, 0)
+	text:setTextColor(255, 255, 255)
 	targetedUnit.group:insert(text)
 	text:toFront()
 	local maxCountdown = 24
