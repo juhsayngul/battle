@@ -4,8 +4,11 @@ local UnitBaseStats = require("UnitBaseStats")
 local Unit = {}
 Unit.__index = Unit
 
+local showDeathAnimation, flashDamageAmount, flashAttackIndicator
+
 function Unit.new(params)
 	local newUnit = {}
+	newUnit.group = display.newGroup()
 	
 	local properties = UnitGraphics.getProperties(params.unitType)
 	local imageSheet = graphics.newImageSheet(properties.fileName, properties.sheetData)
@@ -31,44 +34,19 @@ function Unit.new(params)
 	newUnit.anim.x = (params.pos.x * 32) + 32
 	newUnit.anim.y = (params.pos.y * 32) + 60
 	newUnit.anim:play()
-	newUnit.group = display.newGroup()
-	newUnit.imageGroup = {}
-	newUnit.imageGroup = display.newGroup()
+	newUnit.group:insert(newUnit.anim)
 	
 	setmetatable(newUnit, Unit)
 	return newUnit
 end
 
-function Unit:tryMove(touch, enemies, friends)
-	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
-	local isEnemyHere, isFriendHere = false, false
-	
-	for i in pairs(enemies) do
-		isEnemyHere = isEnemyHere or enemies[i]:isAt(touch)
-	end
-	for i in pairs(friends) do
-		isFriendHere = isFriendHere or friends[i]:isAt(touch)
-	end
-	
-	self:directFace(touch)
-	
-	if isEnemyHere then
-		print ("An enemy is on that square.")
-	elseif isFriendHere then
-		print ("A friendly unit is on that square.")
-	elseif not enoughMoves then
-		print ("Too far away!")
-	else
-		self.stats.live.moves = self.stats.live.moves - self:distanceTo(touch)
-		self.pos.x = touch.x
-		self.pos.y = touch.y
-		self.anim.x = (touch.x * 32) + 32
-		self.anim.y = (touch.y * 32) + 60
-	end
-end
-
 function Unit:resetMoves()
 	self.stats.live.moves = self.stats.base.moves
+end
+
+function Unit:resetControlModes()
+	self.atkModeIsMelee = self.stats.live.melee.atk >= self.stats.live.ranged.atk
+	self.movModeIsMove = true
 end
 
 function Unit:switchAtk()
@@ -87,16 +65,20 @@ function Unit:switchMov()
 	end
 end
 
-function Unit:tryAttack(touch, enemies)
-	local enoughMoves = (self:distanceTo(touch) <= self.stats.live.moves)
-	local tooFar = false
-	local opposingUnit
+function Unit:tryMove(touch, isInRange)
+	self:directFace(touch)
 	
-	if self.atkModeIsMelee then
-		tooFar = (self:distanceTo(touch) > self.stats.live.melee.rng)
-	else
-		tooFar = (self:distanceTo(touch) > self.stats.live.ranged.rng)
+	if isInRange then
+		self.stats.live.moves = self.stats.live.moves - self:distanceTo(touch)
+		self.pos.x = touch.x
+		self.pos.y = touch.y
+		self.anim.x = (touch.x * 32) + 32
+		self.anim.y = (touch.y * 32) + 60
 	end
+end
+
+function Unit:tryAttack(touch, enemies, isInRange)
+	local opposingUnit
 	
 	for i in pairs(enemies) do
 		if enemies[i]:isAt(touch) then
@@ -106,11 +88,7 @@ function Unit:tryAttack(touch, enemies)
 
 	self:directFace(touch)
 	
-	if opposingUnit == nil then
-		print ("There is no enemy on that square.")
-	elseif tooFar then
-		print ("The enemy is too far away!")
-	else
+	if (not (opposingUnit == nil)) and isInRange then
 		self.stats.live.moves = self.stats.live.moves - 1
 		if self.atkModeIsMelee then
 			opposingUnit:takeDamage(self.atkModeIsMelee, self.stats.live.melee.atk)
@@ -122,6 +100,7 @@ end
 
 function Unit:takeDamage(isMelee, attackPower)
 	local defensePower
+	local damageAmount
 	if isMelee then
 		defensePower = self.stats.live.melee.def
 	else
@@ -130,15 +109,21 @@ function Unit:takeDamage(isMelee, attackPower)
 	if self.defending then
 		defensePower = math.floor(defensePower * 1.5)
 	end
-	self.stats.live.health = self.stats.live.health - (attackPower - defensePower)
+	damageAmount = attackPower - defensePower
+	self.stats.live.health = self.stats.live.health - damageAmount
+	flashDamageAmount(self, damageAmount)
 	if (self.stats.live.health <= 0) then
 		self:die()
+	else
+		flashAttackIndicator(self)
 	end
 end
 
 function Unit:die()
+	self:resetDefending()
 	self.anim:removeSelf()
 	self.toDie = true
+	showDeathAnimation(self)
 end
 
 function Unit:distanceTo(loc)
@@ -167,13 +152,80 @@ function Unit:resetDefending()
 end
 
 function Unit:defend()
-	print ("Defending!")
 	if self.defendImage == nil then
 		self.defendImage = display.newImage("assets/defend_symbol.png", self.anim.x, self.anim.y)
-		self.imageGroup:insert(self.defendImage)
+		self.group:insert(self.defendImage)
+		self.defendImage:toFront()
 	end
 	self.defending = true
 	self.stats.live.moves = 0
+end
+
+showDeathAnimation = function(dyingUnit)
+	aniWidth = 5 -- these variables are dummies, they should really be the dimensions of the animation graphic
+	aniHeight = 5
+	local animationLocX = (dyingUnit.pos.x * 32) + 32
+	local animationLocY = (dyingUnit.pos.y * 32) + 60
+	-- create a graphic whose animation ends with a few frames of nothing so that we can calibrate the wait time
+	local graphic = display.newRect(animationLocX, animationLocY, 32, 32)
+	graphic.strokeWidth = 2
+	graphic:setFillColor(0, 0, 0, 1)
+	graphic:setStrokeColor(255, 0, 0)
+	-- animation ideas... poof! they're gone
+	-- graphic location should be at animationLocX/animationLocY variables above
+	-- 		which should be a random spot over the target unit
+	dyingUnit.group:insert(graphic)
+	graphic:toFront()
+	local function destroy ()
+		display.remove(graphic)
+	end
+	timer.performWithDelay(500, destroy) -- rough delay time amount, should actually reflect full amount of animation
+end
+
+flashDamageAmount = function(targetedUnit, damageAmount)
+	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random() * (32 - 20)) + 32
+	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random() * (36 - 20)) + 60 - 16 
+	local text = display.newText("-" .. damageAmount, animationLocX, animationLocY, native.systemFontBold, 16)
+	-- rough positioning and text parameters but it works and looks neat enough
+	text:setTextColor(255, 0, 0)
+	targetedUnit.group:insert(text)
+	text:toFront()
+	local maxCountdown = 24
+	local countdown = maxCountdown
+	local function onEveryFrame()
+		if (countdown == 0) then
+			display.remove(text)
+			Runtime:removeEventListener("enterFrame", onEveryFrame)
+		else
+			if ((text.alpha - 1/maxCountdown) > 0) then
+				text.alpha = text.alpha - 1/maxCountdown
+			end
+			text.y = text.y - 1
+		end
+		countdown = countdown - 1
+	end
+	Runtime:addEventListener("enterFrame", onEveryFrame)
+end
+
+flashAttackIndicator = function(targetedUnit)
+	aniWidth = 5 -- these variables are dummies, they should really be the dimensions of the animation graphic
+	aniHeight = 5
+	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random() * (32 - aniWidth)) + 32
+	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random() * (36 - aniHeight)) + 60
+	-- create a graphic whose animation ends with a few frames of nothing so that we can calibrate the wait time
+	local graphic = display.newRect(animationLocX, animationLocY, 5, 5)
+	graphic.strokeWidth = 2
+	graphic:setFillColor(0, 0, 0, 1)
+	graphic:setStrokeColor(255, 0, 0)
+	-- the graphic should look like some sort of criss-cross spark
+	-- graphic location should be at animationLocX/animationLocY variables above
+	-- 		which should be a random spot over the target unit
+	targetedUnit.group:insert(graphic)
+	graphic:toFront()
+	local function destroy ()
+		display.remove(graphic)
+	end
+	timer.performWithDelay(500, destroy) -- rough delay time amount, should actually reflect full amount of animation
 end
 
 return Unit

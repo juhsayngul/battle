@@ -1,5 +1,5 @@
-local Board = require( "Board" )
 local storyboard = require( "storyboard" )
+local Board = require( "Board" )
 -- local BG = require( "BG" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
@@ -13,30 +13,33 @@ Level.__index = Level
 
 local cancelled = false
 local gamePaused = false
+local waitForAni = false
 
 local buttonListener = {}
 local menu = nil
 local stats = nil
 local isOrangeTurn = true
 
+local gui, board
 local friends, enemies
 local selectedUnit
 
 local levelParams
 
-local getUnits, getGroup, onEveryFrame, handleTouch
+local getUnits, getGroup, onEveryFrame, handleTouch, destroyMenu
+local stopWaitingForAni
 
 function scene:createScene(event)
     local screenGroup = self.view
 	
 	local params = event.params
 	levelParams = params
-	local bg, board, friendsGroup, enemiesGroup, gui
+	local bg, friendsGroup, enemiesGroup
 	
 	levelGroup = display.newGroup()
 	
 	board = Board.new(params.boardParams)
-	gui = GUI.new(buttonListener)
+	gui = GUI.new(buttonListener, isOrangeTurn, false)
 	-- bg = BG.new(params.bgParams)
 	
 	friends = getUnits(params.friendParams)
@@ -46,10 +49,12 @@ function scene:createScene(event)
 	
 	levelGroup:insert(friendsGroup)
 	levelGroup:insert(enemiesGroup)
+	levelGroup:insert(board.rangeTileGroup)
 	levelGroup:insert(board.group)
 	levelGroup:insert(gui.group)
 	-- levelGroup:insert(bg.group)
 	
+	board.rangeTileGroup:toBack()
 	gui.group:toBack()
 	friendsGroup:toBack()
 	enemiesGroup:toBack()
@@ -70,6 +75,9 @@ end
 
 function scene:exitScene(event)
     local screenGroup = self.view
+	
+	destroyMenu()
+	gui:destroy(buttonListener)
 	
 	Runtime:removeEventListener("enterFrame", onEveryFrame)
     Runtime:removeEventListener("touch", handleTouch)
@@ -109,7 +117,29 @@ local function createMenu(touchedUnit)
 	scene.view:insert(stats.group)
 end
 
-local function destroyMenu()
+local function refreshRangeDisplay()
+	board:destroyRangeVision()
+	
+	local opposition, teammates
+	
+	opposition = enemies
+	teammates = friends
+	
+	if not isOrangeTurn then
+		opposition = friends
+		teammates = enemies
+	end
+	
+	if not (selectedUnit == nil) and (not (menu == nil)) then
+		if selectedUnit.movModeIsMove then
+			board:drawMoveRange(selectedUnit, teammates, opposition, true)
+		else
+			board:drawAttackRange(selectedUnit, opposition, true)
+		end
+	end
+end
+
+destroyMenu = function ()
 	if menu ~= nil then
 		menu:destroy(buttonListener)
 	end
@@ -153,6 +183,7 @@ buttonListener.switchMov = function (event)
 	if event.phase == "began" then
 		selectedUnit:switchMov()
 		menu:switchMov(buttonListener, selectedUnit.movModeIsMove)
+		refreshRangeDisplay()
 	end
 end
 
@@ -160,10 +191,11 @@ buttonListener.switchAtk = function (event)
 	if event.phase == "began" then
 		if selectedUnit.atkModeIsMelee and (selectedUnit.stats.live.ranged.atk > 0) or
 		selectedUnit.atkModeIsMelee ~= true and (selectedUnit.stats.live.melee.atk > 0) then
-			menu:switchAtk(buttonListener, selectedUnit.atkModeIsMelee)
+			menu:switchAtk(buttonListener, selectedUnit.atkModeIsMelee, selectedUnit)
 			stats:update(selectedUnit)
 		end
 		selectedUnit:switchAtk()
+		refreshRangeDisplay()
 	end
 end
 
@@ -185,7 +217,7 @@ buttonListener.pause = function (event)
 		gamePaused = true
 		local options = {
 			effect = "fromBottom",
-			time = 300,
+			time = 100,
 			params = levelParams,
 			isModal = true
 		}
@@ -221,18 +253,21 @@ onEveryFrame = function(event)
 			cancelled = true
 			local i
 			if isOrangeTurn then
-				isOrangeTurn = false
 				for i in pairs(enemies) do
 					enemies[i]:resetDefending()
 					enemies[i]:resetMoves()
+					enemies[i]:resetControlModes()
 				end
+				isOrangeTurn = false
 			else
-				isOrangeTurn = true
 				for i in pairs(friends) do
 					friends[i]:resetDefending()
 					friends[i]:resetMoves()
+					friends[i]:resetControlModes()
 				end
+				isOrangeTurn = true
 			end
+			gui:switchTurn()
 		end
 	end
 	if cancelled then
@@ -241,13 +276,17 @@ onEveryFrame = function(event)
 		if (selectedUnit ~= nil) then
 			if (selectedUnit.stats.base.moves == selectedUnit.stats.live.moves) or (selectedUnit.stats.live.moves == 0) then
 				destroyMenu()
+				board:destroyRangeVision()
 			else
-				print "Can't cancel. Unit already used."
 				local unit = selectedUnit
 				destroyMenu()
 				createMenu(unit)
+				refreshRangeDisplay()
 			end
 		end
+	end
+	if not isOrangeTurn then
+		doAI()
 	end
 end
 
@@ -274,15 +313,14 @@ handleTouch = function(event)
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
 			if selectedUnit ~= nil then
 				if selectedUnit.movModeIsMove then
-					selectedUnit:tryMove(touch, opposition, teammates)
+					selectedUnit:tryMove(touch, board:isItWithinMoveRange({x = touch.x, y = touch.y}))
 				elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
-					selectedUnit:tryAttack(touch, opposition)
+					selectedUnit:tryAttack(touch, opposition, board:isItWithinAttackRange({x = touch.x, y = touch.y}))
 				end
 			elseif menu == nil then
 				--check friendly units for touch
 				for i in pairs(teammates) do
 					if teammates[i]:isAt(touch) and not touch.hit then
-						print ("Unit touched!")
 						createMenu(teammates[i])
 						touch.hit = true
 					end
@@ -291,7 +329,6 @@ handleTouch = function(event)
 				--check enemy units for touch
 				for i in pairs(opposition) do
 					if opposition[i]:isAt(touch) and not touch.hit then
-						print ("Enemy unit touched!")
 						touch.hit = true
 					end
 				end
@@ -312,9 +349,21 @@ handleTouch = function(event)
 				end
 			end
 			
+			refreshRangeDisplay()
+			
 			checkIfEnded()
 		end
 	end
+end
+
+doAI = function()
+	if not waitForAni then
+		print ("Doing AI")
+	end
+end
+
+stopWaitingForAni = function()
+	local waitForAni = false
 end
 
 scene:addEventListener("createScene", scene)

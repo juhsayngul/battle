@@ -15,9 +15,17 @@ function Menu.new(buttonListener, selectedUnit)
 	end
 	
 	if selectedUnit.atkModeIsMelee then
-		newMenu.button.switchAtk = display.newImage("assets/ranged.png", 102, 325)
+		if (selectedUnit.stats.live.ranged.atk > 0) then
+			newMenu.button.switchAtk = display.newImage("assets/ranged.png", 102, 325)
+		else
+			newMenu.button.switchAtk = display.newImage("assets/ranged_na.png", 102, 325)
+		end
 	else
-		newMenu.button.switchAtk = display.newImage("assets/melee.png", 102, 325)
+		if (selectedUnit.stats.live.melee.atk > 0) then
+			newMenu.button.switchAtk = display.newImage("assets/melee.png", 102, 325)
+		else
+			newMenu.button.switchAtk = display.newImage("assets/melee_na.png", 102, 325)
+		end
 	end
 	
 	newMenu.button.defend = display.newImage("assets/defend.png", 172, 325)
@@ -66,14 +74,22 @@ function Menu:switchMov(buttonListener, move)
 	self.button.switchMov:addEventListener("touch", buttonListener.switchMov)
 end
 
-function Menu:switchAtk(buttonListener, melee)
+function Menu:switchAtk(buttonListener, melee, selectedUnit)
 	self.button.switchAtk:removeEventListener("touch", buttonListener.switchAtk)
 	self.button.switchAtk:removeSelf()
 	self.button.switchAtk = nil
 	if melee then
-		self.button.switchAtk = display.newImage("assets/melee.png", 102, 325)
+		if (selectedUnit.stats.live.melee.atk > 0) then
+			newMenu.button.switchAtk = display.newImage("assets/melee.png", 102, 325)
+		else
+			newMenu.button.switchAtk = display.newImage("assets/melee_na.png", 102, 325)
+		end
 	else
-		self.button.switchAtk = display.newImage("assets/ranged.png", 102, 325)
+		if (selectedUnit.stats.live.ranged.atk > 0) then
+			newMenu.button.switchAtk = display.newImage("assets/ranged.png", 102, 325)
+		else
+			newMenu.button.switchAtk = display.newImage("assets/ranged_na.png", 102, 325)
+		end
 	end
 	self.button.group:insert(newMenu.button.switchAtk)
 	self.button.switchAtk:addEventListener("touch", buttonListener.switchAtk)
