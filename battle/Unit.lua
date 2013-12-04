@@ -213,19 +213,28 @@ flashAttackIndicator = function(targetedUnit)
 	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random() * (32 - aniWidth)) + 32
 	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random() * (36 - aniHeight)) + 60
 	-- create a graphic whose animation ends with a few frames of nothing so that we can calibrate the wait time
-	local graphic = display.newRect(animationLocX, animationLocY, 5, 5)
-	graphic.strokeWidth = 2
-	graphic:setFillColor(0, 0, 0, 1)
-	graphic:setStrokeColor(255, 0, 0)
+	local sheetdata = {width = 16, height = 20, numFrames = 4, sheetContentWidth = 64, sheetContentHeight = 20}
+	local options = 
+	{
+		name = "hit",
+		frames = {1, 2, 3, 4},
+		time = 50,
+		loopCount = 1
+	}
+	local imageSheet = graphics.newImageSheet("assets/hit.png", sheetdata)
+	local anim = display.newSprite(imageSheet, options)
+	anim.x = animationLocX
+	anim.y = animationLocY
+	anim:play()
 	-- the graphic should look like some sort of criss-cross spark
 	-- graphic location should be at animationLocX/animationLocY variables above
 	-- 		which should be a random spot over the target unit
-	targetedUnit.group:insert(graphic)
-	graphic:toFront()
+	targetedUnit.group:insert(anim)
+	anim:toFront()
 	local function destroy ()
-		display.remove(graphic)
+		display.remove(anim)
 	end
-	timer.performWithDelay(500, destroy) -- rough delay time amount, should actually reflect full amount of animation
+	timer.performWithDelay(250, destroy) -- rough delay time amount, should actually reflect full amount of animation
 end
 
 return Unit
