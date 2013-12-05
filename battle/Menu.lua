@@ -30,7 +30,11 @@ function Menu.new(buttonListener, selectedUnit)
 	end
 	
 	newMenu.button.defend = display.newImage("assets/defend.png", 172, 325)
-	newMenu.button.cancel = display.newImage("assets/cancel.png", 242, 325)
+	if (selectedUnit.stats.live.moves == selectedUnit.stats.base.moves) then
+		newMenu.button.cancel = display.newImage("assets/cancel.png", 242, 325)
+	else
+		newMenu.button.cancel = display.newImage("assets/inspect.png", 242, 325)
+	end
 	
 	newMenu.button.switchMov:addEventListener("touch", buttonListener.switchMov)
 	newMenu.button.switchAtk:addEventListener("touch", buttonListener.switchAtk)

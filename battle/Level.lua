@@ -12,6 +12,7 @@ local Level = {}
 Level.__index = Level
 
 local cancelled = false
+local inspecting = false
 local gamePaused = false
 local waitForAni = false
 
@@ -213,17 +214,23 @@ buttonListener.switchAtk = function (event)
 end
 
 buttonListener.defend = function (event)
-	audio.play(sfx.click)
 	if event.phase == "began" then
 		selectedUnit:defend()
+		audio.play(sfx.click)
 	end
 end
 
 buttonListener.cancel = function (event)
-	audio.play(sfx.click)
 	if event.phase == "began" then
-		print ("Cancelled")
-		cancelled = true
+		if selectedUnit.stats.live.moves ~= selectedUnit.stats.base.moves then
+			print ("Inspecting")
+			inspecting = true
+			audio.play(sfx.click)
+		else
+			print ("Cancelled")
+			cancelled = true
+			audio.play(sfx.click)
+		end
 	end
 end
 
@@ -282,6 +289,10 @@ onEveryFrame = function(event)
 				end
 				isOrangeTurn = true
 			end
+			inspecting = false
+			if enemystats ~= nil then
+				enemystats:destroy()
+			end
 			gui:switchTurn()
 		end
 	end
@@ -331,6 +342,18 @@ handleTouch = function(event)
 					selectedUnit:tryMove(touch, board:isItWithinMoveRange({x = touch.x, y = touch.y}))
 				elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
 					selectedUnit:tryAttack(touch, opposition, board:isItWithinAttackRange({x = touch.x, y = touch.y}))
+				end
+				if inspecting == true then
+					for i in pairs(opposition) do
+						if opposition[i]:isAt(touch) and not touch.hit then
+							if enemystats ~= nil then
+								enemystats:destroy()
+							end
+							enemystats = StatsOverlay:enemyStats(opposition[i])
+							scene.view:insert(enemystats.group)
+							touch.hit = true
+						end
+					end
 				end
 			elseif menu == nil then
 				--check friendly units for touch
