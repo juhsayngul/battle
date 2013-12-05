@@ -36,7 +36,7 @@ function scene:createScene(event)
 	
 	salute = display.newImage("assets/salute.png", 50, 20)
 	salute.x = 160
-	howToButton = display.newImage("assets/inspect.png", 260, 10) -- place holder button; probably shouldn't be circular anyway
+	howToButton = display.newImage("assets/how_to_play.png", 260, 10)
 	
 	leftArrow = display.newImage("assets/arrow_left.png", 320, 330)
 	leftArrowGray = display.newImage("assets/arrow_left_gray.png", 25, 330)
