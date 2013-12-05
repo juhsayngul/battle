@@ -3,25 +3,18 @@ local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 
 local resumeButton, quitButton
--- local restartButton
 
-local levelParams
 
 function scene:createScene(event)
     local screenGroup = self.view
 	
-	levelParams = event.params
-	
 	resumeButton = display.newImage("assets/resume_button.png", 60, 125)
-	-- restartButton = display.newImage("assets/restart_button.png", 60, 175)
 	quitButton = display.newImage("assets/quit_button.png", 60, 225)
 	
 	screenGroup:insert(resumeButton)
-	-- screenGroup:insert(restartButton)
 	screenGroup:insert(quitButton)
 	
 	resumeButton:toFront()
-	-- restartButton:toFront()
 	quitButton:toFront()
 end
 
@@ -59,8 +52,8 @@ quitTouch = function(event)
 			effect = "slideDown",
 			time = 300,
 			params = {
-				nextLevelName = (levelParams.nextLevelName),
-				proceed = true
+				unlockNextLevel = false,
+				removeLevelScene = true
 			}
 		}
 		storyboard.gotoScene("Title-Screen", options)

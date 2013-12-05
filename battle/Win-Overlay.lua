@@ -7,8 +7,6 @@ local continueButton
 function scene:createScene(event)
     local screenGroup = self.view
 	
-	levelParams = event.params
-	
 	continueButton = display.newImage("assets/resume_button.png", 60, 175)
 	screenGroup:insert(continueButton)
 	continueButton:toFront()
@@ -35,8 +33,8 @@ continueTouch = function(event)
 			effect = "slideDown",
 			time = 300,
 			params = {
-				nextLevelName = (levelParams.nextLevelName),
-				proceed = true
+				unlockNextLevel = true,
+				removeLevelScene = true
 			}
 		}
 		storyboard.gotoScene("Title-Screen", options)

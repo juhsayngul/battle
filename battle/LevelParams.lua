@@ -5,9 +5,7 @@ local _W, _H = display.contentWidth, display.contentHeight
 local params = {}
 
 -- just an example level we're working with
-params["Level-1"] = {
-	levelName = "Level-1",
-	nextLevelName = "Level-2",
+params["Level 1"] = {
 	boardParams = {},
 	bgParams = {pos = {x = 0, y = 0}, length = {x = _W, y = _H}},
 	friendParams = {
@@ -21,9 +19,7 @@ params["Level-1"] = {
 }
 
 -- just another example to show how easily we can write new levels
-params["Level-2"] = {
-	levelName = "Level-2",
-	nextLevelName = "Level-3",
+params["Level 2"] = {
 	boardParams = {},
 	bgParams = {pos = {x = 0, y = 0}, length = {x = _W, y = _H}},
 	friendParams = {
@@ -34,9 +30,7 @@ params["Level-2"] = {
 				}
 }
 
-params["Level-3"] = {
-	levelName = "Level-3",
-	nextLevelName = "Level-1",
+params["Level 3"] = {
 	boardParams = {},
 	bgParams = {pos = {x = 0, y = 0}, length = {x = _W, y = _H}},
 	friendParams = {

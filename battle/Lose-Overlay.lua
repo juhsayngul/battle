@@ -7,8 +7,6 @@ local retryButton
 function scene:createScene(event)
     local screenGroup = self.view
 	
-	levelParams = event.params
-	
 	retryButton = display.newImage("assets/restart_button.png", 60, 175)
 	screenGroup:insert(retryButton)
 	retryButton:toFront()
@@ -35,8 +33,8 @@ retryTouch = function(event)
 			effect = "slideDown",
 			time = 300,
 			params = {
-				nextLevelName = (levelParams.levelName),
-				proceed = true
+				unlockNextLevel = false,
+				removeLevelScene = true
 			}
 		}
 		storyboard.gotoScene("Title-Screen", options)

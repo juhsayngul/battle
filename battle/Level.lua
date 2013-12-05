@@ -1,11 +1,10 @@
 local storyboard = require( "storyboard" )
 local Board = require( "Board" )
--- local BG = require( "BG" )
 local Unit = require ("Unit")
 local Menu = require ("Menu")
 local StatsOverlay = require ("StatsOverlay")
 local GUI = require ("GUI")
-local sfx = require( "sfx" )
+local sfx = require("sfx")
 
 local scene = storyboard.newScene()
 
@@ -26,8 +25,6 @@ local gui, board
 local friends, enemies
 local selectedUnit
 
-local levelParams
-
 local getUnits, getGroup, onEveryFrame, handleTouch, destroyMenu
 local stopWaitingForAni
 
@@ -35,14 +32,12 @@ function scene:createScene(event)
     local screenGroup = self.view
 	
 	local params = event.params
-	levelParams = params
-	local bg, friendsGroup, enemiesGroup
+	local friendsGroup, enemiesGroup
 	
 	levelGroup = display.newGroup()
 	
 	board = Board.new(params.boardParams)
 	gui = GUI.new(buttonListener, isOrangeTurn, false)
-	-- bg = BG.new(params.bgParams)
 	
 	friends = getUnits(params.friendParams)
 	enemies = getUnits(params.enemyParams)
@@ -54,14 +49,12 @@ function scene:createScene(event)
 	levelGroup:insert(board.rangeTileGroup)
 	levelGroup:insert(board.group)
 	levelGroup:insert(gui.group)
-	-- levelGroup:insert(bg.group)
 	
 	board.rangeTileGroup:toBack()
 	gui.group:toBack()
 	friendsGroup:toBack()
 	enemiesGroup:toBack()
 	board.group:toBack()
-	-- bg.group:toBack()
 	
 	screenGroup:insert(levelGroup)
 end
@@ -69,8 +62,8 @@ end
 function scene:enterScene(event)
     local screenGroup = self.view
 	
-    -- storyboard.removeScene("Title-Screen")
-	audio.play(sfx.bgm, {channel=1, loops=-1})
+	audio.stop(sfx.channels.bgm)
+	sfx.channels.bgm = audio.play(sfx.bgm, {loops=-1})
 	
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 	Runtime:addEventListener("touch", handleTouch)
@@ -78,7 +71,17 @@ end
 
 function scene:exitScene(event)
     local screenGroup = self.view
-	audio.stop()
+	
+	audio.stop(sfx.channels.bgm)
+	sfx.channels.bgm = audio.play(sfx.menu, {loops=-1})
+	
+	local i
+	for i in pairs(friends) do
+		friends[i]:resetDefending()
+	end
+	for i in pairs(enemies) do
+		enemies[i]:resetDefending()
+	end
 	
 	destroyMenu()
 	gui:destroy(buttonListener)
@@ -96,7 +99,9 @@ function scene:overlayBegan( event )
 		for i in pairs(enemies) do
 			enemies[i].anim:pause()
 		end
-		audio.pause(sfx.bgm)
+		if sfx.enabled then
+			audio.setVolume(0.3)
+		end
 	end
 end
 
@@ -110,7 +115,9 @@ function scene:overlayEnded( event )
 		for i in pairs(enemies) do
 			enemies[i].anim:play()
 		end
-		audio.resume(sfx.bgm)
+		if sfx.enabled then
+			audio.setVolume(1.0)
+		end
 	end
 end
 
@@ -138,7 +145,6 @@ local function refreshRangeDisplay()
 	
 	if not (selectedUnit == nil) and (not (menu == nil)) then
 		if selectedUnit.movModeIsMove then
-			--print(selectedUnit.unitType)
 			board:drawMoveRange(selectedUnit, teammates, opposition, true)
 		else
 			board:drawAttackRange(selectedUnit, opposition, true)
@@ -162,7 +168,7 @@ local function win()
 	local options = {
 		effect = "fromBottom",
 		time = 300,
-		params = levelParams,
+		params = {},
 		isModal = true
 	}
 	storyboard.showOverlay("Win-Overlay", options)
@@ -172,7 +178,7 @@ local function lose()
 	local options = {
 		effect = "fromBottom",
 		time = 300,
-		params = levelParams,
+		params = {},
 		isModal = true
 	}
 	storyboard.showOverlay("Lose-Overlay", options)
@@ -227,7 +233,7 @@ buttonListener.pause = function (event)
 		local options = {
 			effect = "fromBottom",
 			time = 100,
-			params = levelParams,
+			params = {},
 			isModal = true
 		}
 		storyboard.showOverlay("Pause-Overlay", options)
