@@ -384,7 +384,7 @@ end
 
 doAI = function()
 	if not waitForAni then
-		print ("Doing AI")
+		
 	end
 end
 
