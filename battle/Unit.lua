@@ -1,5 +1,6 @@
 local UnitGraphics = require("UnitGraphics")
 local UnitBaseStats = require("UnitBaseStats")
+local sfx = require( "sfx" )
 
 local Unit = {}
 Unit.__index = Unit
@@ -11,8 +12,8 @@ function Unit.new(params)
 	newUnit.group = display.newGroup()
 	
 	local properties = UnitGraphics.getProperties(params.unitType)
+	newUnit.unitType = params.unitType
 	local imageSheet = graphics.newImageSheet(properties.fileName, properties.sheetData)
-	
 	newUnit.stats = {}
 	local base = UnitBaseStats.getBaseStats(params.unitType)
 	newUnit.stats.base = base
@@ -74,6 +75,9 @@ function Unit:tryMove(touch, isInRange)
 		self.pos.y = touch.y
 		self.anim.x = (touch.x * 32) + 32
 		self.anim.y = (touch.y * 32) + 60
+		local unitType = self.unitType
+		print(unitType)
+		sfx.playMoveSound(unitType)
 	end
 end
 

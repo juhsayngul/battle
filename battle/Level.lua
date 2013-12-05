@@ -70,7 +70,7 @@ function scene:enterScene(event)
     local screenGroup = self.view
 	
     -- storyboard.removeScene("Title-Screen")
-	audio.play(sfx.bgm, {loops=-1})
+	audio.play(sfx.bgm, {channel=1, loops=-1})
 	
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 	Runtime:addEventListener("touch", handleTouch)
@@ -138,6 +138,7 @@ local function refreshRangeDisplay()
 	
 	if not (selectedUnit == nil) and (not (menu == nil)) then
 		if selectedUnit.movModeIsMove then
+			--print(selectedUnit.unitType)
 			board:drawMoveRange(selectedUnit, teammates, opposition, true)
 		else
 			board:drawAttackRange(selectedUnit, opposition, true)

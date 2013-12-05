@@ -19,4 +19,16 @@ sfx.tankMove = audio.loadSound( "audio/tank_move.wav" )
 sfx.bgm = audio.loadSound( "audio/bgm_loop.wav" )
 sfx.menu = audio.loadSound( "audio/menu_loop.ogg" )
 
+sfx.playMoveSound = function(unitType)
+	if (unitType == "infantry_f" or "infantry_e") then
+		audio.play(sfx.infMove)
+		print("infantryMoving!")
+	elseif (unitType == "tank_f" or "tank_e") then
+		audio.play(sfx.tankMove)
+	else
+		print("Nope!")
+		print(unitType)
+	end
+end
+
 return sfx
