@@ -1,5 +1,4 @@
 local sfx = {}  --create the main Sound Effects (sfx) table.
-return sfx
 
 sfx.click = audio.loadSound( "audio/click.wav" )
 sfx.badMove = audio.loadSound( "audio/invalid_move.aiff" )
@@ -19,3 +18,5 @@ sfx.tankAttack = audio.loadSound( "audio/tank_attack.wav" )
 sfx.tankMove = audio.loadSound( "audio/tank_move.wav" )
 sfx.bgm = audio.loadSound( "audio/bgm_loop.wav" )
 sfx.menu = audio.loadSound( "audio/menu_loop.ogg" )
+
+return sfx

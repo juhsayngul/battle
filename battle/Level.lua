@@ -5,6 +5,7 @@ local Unit = require ("Unit")
 local Menu = require ("Menu")
 local StatsOverlay = require ("StatsOverlay")
 local GUI = require ("GUI")
+local sfx = require( "sfx" )
 
 local scene = storyboard.newScene()
 
@@ -69,6 +70,7 @@ function scene:enterScene(event)
     local screenGroup = self.view
 	
     -- storyboard.removeScene("Title-Screen")
+	audio.play(sfx.bgm, {loops=-1})
 	
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 	Runtime:addEventListener("touch", handleTouch)
@@ -76,6 +78,7 @@ end
 
 function scene:exitScene(event)
     local screenGroup = self.view
+	audio.stop()
 	
 	destroyMenu()
 	gui:destroy(buttonListener)
@@ -93,6 +96,7 @@ function scene:overlayBegan( event )
 		for i in pairs(enemies) do
 			enemies[i].anim:pause()
 		end
+		audio.pause(sfx.bgm)
 	end
 end
 
@@ -106,6 +110,7 @@ function scene:overlayEnded( event )
 		for i in pairs(enemies) do
 			enemies[i].anim:play()
 		end
+		audio.resume(sfx.bgm)
 	end
 end
 
@@ -201,12 +206,14 @@ buttonListener.switchAtk = function (event)
 end
 
 buttonListener.defend = function (event)
+	audio.play(sfx.click)
 	if event.phase == "began" then
 		selectedUnit:defend()
 	end
 end
 
 buttonListener.cancel = function (event)
+	audio.play(sfx.click)
 	if event.phase == "began" then
 		print ("Cancelled")
 		cancelled = true

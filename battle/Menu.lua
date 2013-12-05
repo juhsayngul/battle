@@ -1,3 +1,5 @@
+local sfx = require( "sfx" )
+
 local Menu = {}
 Menu.__index = Menu
 
@@ -60,6 +62,7 @@ function Menu:destroy(buttonListener)
 end
 
 function Menu:switchMov(buttonListener, move)
+	audio.play(sfx.click)
 	self.button.switchMov:removeEventListener("touch", buttonListener.switchMov)
 	self.button.switchMov:removeSelf()
 	self.button.switchMov = nil
@@ -75,6 +78,7 @@ function Menu:switchMov(buttonListener, move)
 end
 
 function Menu:switchAtk(buttonListener, melee, selectedUnit)
+	audio.play(sfx.click)
 	self.button.switchAtk:removeEventListener("touch", buttonListener.switchAtk)
 	self.button.switchAtk:removeSelf()
 	self.button.switchAtk = nil

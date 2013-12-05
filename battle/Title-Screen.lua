@@ -53,7 +53,6 @@ end
 
 function scene:exitScene(event)
     local screenGroup = self.view
-	
 	audio.dispose(menuBgm)
 	menuBgm = nil
 	
@@ -68,6 +67,7 @@ startTouch = function(event)
 			time = 300,
 			params = LevelParams.getLevelParams(loadLevel())
 		}
+		audio.stop()
 		storyboard.gotoScene("Level", options)
 	end
 end
