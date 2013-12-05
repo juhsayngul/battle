@@ -79,7 +79,10 @@ function Unit:tryMove(touch, isInRange)
 		
 		print(self.unitType)
 		sfx.playMoveSound(self.unitType)
+	else
+		audio.play(sfx.badMove)
 	end
+	
 end
 
 function Unit:tryAttack(touch, enemies, isInRange)
@@ -100,6 +103,9 @@ function Unit:tryAttack(touch, enemies, isInRange)
 		else
 			opposingUnit:takeDamage(self.atkModeIsMelee, self.stats.live.ranged.atk)
 		end
+		sfx.playAttSound(self.unitType)
+	else
+		audio.play(sfx.badMove)
 	end
 end
 
@@ -119,6 +125,7 @@ function Unit:takeDamage(isMelee, attackPower)
 	flashDamageAmount(self, damageAmount)
 	if (self.stats.live.health <= 0) then
 		self:die()
+		sfx.playDeathSound(self.unitType)
 	else
 		flashAttackIndicator(self)
 	end
