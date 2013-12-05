@@ -11,6 +11,7 @@ local startTouch, loadLevel
 local levelProgress
 
 local loadLevel, saveLevel
+local menuBgm
 
 function scene:createScene(event)
     local screenGroup = self.view
@@ -18,6 +19,7 @@ function scene:createScene(event)
 	salute = display.newImage("assets/salute.png", 50, 20)
 	startButton = display.newImage("assets/start_button.png", 60, 350)
 	howToButton = display.newImage("assets/inspect.png", 260, 10) -- placeholder button; probably shouldn't be circular anyway
+	menuBgm = audio.loadSound( "audio/menu_loop.ogg" )
 	
 	screenGroup:insert(salute)
 	screenGroup:insert(startButton)
@@ -30,6 +32,7 @@ end
 
 function scene:enterScene(event)
     local screenGroup = self.view
+	audio.play(menuBgm, {loops=-1})
 	
 	if (event.params) then
 		if (event.params.proceed) then
@@ -50,6 +53,9 @@ end
 
 function scene:exitScene(event)
     local screenGroup = self.view
+	
+	audio.dispose(menuBgm)
+	menuBgm = nil
 	
 	startButton:removeEventListener("touch", startTouch)
 	howToButton:removeEventListener("touch", howToTouch)
