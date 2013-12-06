@@ -119,6 +119,9 @@ function Unit:takeDamage(isMelee, attackPower)
 		defensePower = math.floor(defensePower * 1.5)
 	end
 	damageAmount = attackPower - defensePower
+	if damageAmount < 0 then
+		damageAmounut = 0
+	end
 	self.stats.live.health = self.stats.live.health - damageAmount
 	flashDamageAmount(self, damageAmount)
 	if (self.stats.live.health <= 0) then
@@ -131,7 +134,7 @@ function Unit:die()
 	sfx.playDeathSound(self.unitType)
 	self:resetDefending()
 	self:stopBeingInspected()
-	self.anim:removeSelf()
+	display.remove(self.anim)
 	self.toDie = true
 	showDeathAnimation(self)
 end
@@ -204,7 +207,7 @@ showDeathAnimation = function(dyingUnit)
 			display.remove(graphic)
 			Runtime:removeEventListener("enterFrame", onEveryFrame)
 		else
-			if (graphic.xScale * graphic.yScale > 0) then
+			if (graphic.xScale - 1/maxCountdown> 0 and graphic.yScale - 1/maxCountdown > 0) then
 				graphic.xScale = graphic.xScale - 1/maxCountdown
 				graphic.yScale = graphic.yScale - 1/maxCountdown
 			end
@@ -258,15 +261,13 @@ flashAttackIndicator = function(targetedUnit)
 	anim.x = animationLocX
 	anim.y = animationLocY
 	anim:play()
-	-- the graphic should look like some sort of criss-cross spark
-	-- graphic location should be at animationLocX/animationLocY variables above
-	-- 		which should be a random spot over the target unit
+	
 	targetedUnit.group:insert(anim)
 	anim:toFront()
 	local function destroy ()
 		display.remove(anim)
 	end
-	timer.performWithDelay(250, destroy) -- rough delay time amount, should actually reflect full amount of animation
+	timer.performWithDelay(250, destroy)
 end
 
 return Unit

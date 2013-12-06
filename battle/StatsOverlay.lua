@@ -107,12 +107,12 @@ function StatsOverlay:update(selectedUnit)
 	newStats.group:insert(newStats.imageGroup)
 end
 
-function StatsOverlay:enemyStats(selectedUnit)
+function StatsOverlay:enemyStats(selectedUnit, melee)
 	self = {}
 	self.group = display.newGroup()
 	self.imageGroup = {}
 	self.imageGroup = display.newGroup()
-	if selectedUnit.atkModeIsMelee then
+	if melee then
 		self.attackText = display.newText("ATTACK: " , 160, 380, native.systemFontBold, 12)
 		for i=0, selectedUnit.stats.live.melee.atk - 1 do
 			local attackImage = display.newImage("assets/attack_meter.png", (self.attackText.x + self.attackText.width / 2) + i * 7, 380)

@@ -99,10 +99,7 @@ continueTouch = function(event)
 end
 
 levelBoxTouch[1] = function(event)
-	local x = math.random()
-	print(x)
 	if event.phase == "ended" then
-		print(x)
 		audio.play(sfx.click)
 		options = {
 			effect = "slideUp",

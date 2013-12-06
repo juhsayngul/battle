@@ -25,7 +25,7 @@ local gui, board
 local friends, enemies
 local selectedUnit, inspectedUnit
 
-local getUnits, getGroup, onEveryFrame, handleTouch, destroyMenu
+local getUnits, getGroup, onEveryFrame, handleTouch, createMenu, destroyMenu
 local stopWaitingForAni
 
 function scene:createScene(event)
@@ -37,7 +37,7 @@ function scene:createScene(event)
 	levelGroup = display.newGroup()
 	
 	board = Board.new(params.boardParams)
-	gui = GUI.new(buttonListener, isOrangeTurn, true)
+	gui = GUI.new(buttonListener, isOrangeTurn, false)
 	
 	inspectingText = display.newText(" ", 0, 0, native.systemFontBold, 12)
 	inspectingText.x, inspectingText.y = 160, 442
@@ -135,11 +135,21 @@ local function quitInspecting()
 	end
 end
 
-local function createMenu(touchedUnit)
+createMenu = function(touchedUnit)
 	selectedUnit = touchedUnit
 	selectedUnit.defending = false
 	menu = Menu.new(buttonListener, selectedUnit)
 	stats = StatsOverlay.new(selectedUnit)
+	if enemystats ~= nil and inspectedUnit ~= nil then
+		enemystats:destroy()
+		if selectedUnit == nil then
+			enemystats = StatsOverlay:enemyStats(inspectedUnit, inspectedUnit.atkModeIsMelee)
+		else
+			enemystats = StatsOverlay:enemyStats(inspectedUnit, selectedUnit.atkModeIsMelee)
+		end
+		inspectedUnit:beInspected()
+		scene.view:insert(enemystats.group)
+	end
 	scene.view:insert(menu.group)
 	scene.view:insert(stats.group)
 end
@@ -182,14 +192,20 @@ local function win()
 	local options = {
 		effect = "fromBottom",
 		time = 300,
-		params = {destination = "Two-Player"},
+		params = {destination = "Title-Screen"},
 		isModal = true
 	}
 	storyboard.showOverlay("Win-Overlay", options)
 end
 
 local function lose()
-	win()
+	local options = {
+		effect = "fromBottom",
+		time = 300,
+		params = {destination = "Title-Screen"},
+		isModal = true
+	}
+	storyboard.showOverlay("Lose-Overlay", options)
 end
 
 local function checkIfEnded()
@@ -217,6 +233,17 @@ buttonListener.switchAtk = function (event)
 		end
 		selectedUnit:switchAtk()
 		refreshRangeDisplay()
+		if enemystats ~= nil then
+			enemystats:destroy()
+		end
+		if inspectedUnit ~= nil then
+			if selectedUnit == nil then
+				enemystats = StatsOverlay:enemyStats(inspectedUnit, inspectedUnit.atkModeIsMelee)
+			else
+				enemystats = StatsOverlay:enemyStats(inspectedUnit, selectedUnit.atkModeIsMelee)
+			end
+			scene.view:insert(enemystats.group)
+		end
 	end
 end
 
@@ -250,7 +277,7 @@ buttonListener.pause = function (event)
 		local options = {
 			effect = "fromBottom",
 			time = 100,
-			params = {destination = "Two-Player"},
+			params = {destination = "Title-Screen"},
 			isModal = true
 		}
 		storyboard.showOverlay("Pause-Overlay", options)
@@ -280,6 +307,11 @@ getGroup = function (units)
 end
 
 onEveryFrame = function(event)
+	if enemystats == nil then
+		if inspectedUnit ~= nil then
+			inspectedUnit:stopBeingInspected()
+		end
+	end
 	if (selectedUnit ~= nil) then
 		if (selectedUnit.stats.live.moves == 0) then
 			cancelled = true
@@ -356,7 +388,11 @@ handleTouch = function(event)
 							if enemystats ~= nil then
 								enemystats:destroy()
 							end
-							enemystats = StatsOverlay:enemyStats(opposition[i])
+							if selectedUnit == nil then
+								enemystats = StatsOverlay:enemyStats(opposition[i], opposition[i].atkModeIsMelee)
+							else
+								enemystats = StatsOverlay:enemyStats(opposition[i], selectedUnit.atkModeIsMelee)
+							end
 							inspectedUnit = opposition[i]
 							inspectedUnit:beInspected()
 							scene.view:insert(enemystats.group)
@@ -371,7 +407,11 @@ handleTouch = function(event)
 								end
 								inspectedUnit = teammates[i]
 								inspectedUnit:beInspected()
-								enemystats = StatsOverlay:enemyStats(teammates[i])
+								if selectedUnit == nil then
+									enemystats = StatsOverlay:enemyStats(teammates[i], teammates[i].atkModeIsMelee)
+								else
+									enemystats = StatsOverlay:enemyStats(teammates[i], selectedUnit.atkModeIsMelee)
+								end
 								scene.view:insert(enemystats.group)
 								touch.hit = true
 							end
@@ -379,7 +419,7 @@ handleTouch = function(event)
 					end
 				else
 					if selectedUnit.movModeIsMove then
-						selectedUnit:tryMove(touch, board:isItWithinMoveRange({x = touch.x, y = touch.y}), , board:getNumMovesTo({x = touch.x, y = touch.y}))
+						selectedUnit:tryMove(touch, board:isItWithinMoveRange({x = touch.x, y = touch.y}), board:getNumMovesTo({x = touch.x, y = touch.y}))
 					elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
 						selectedUnit:tryAttack(touch, opposition, board:isItWithinAttackRange({x = touch.x, y = touch.y}))
 					end
@@ -407,7 +447,13 @@ handleTouch = function(event)
 							inspectedUnit:stopBeingInspected()
 						end
 						audio.play(sfx.click)
-						enemystats = StatsOverlay:enemyStats(opposition[i])
+						inspectedUnit = opposition[i]
+						if selectedUnit == nil then
+							enemystats = StatsOverlay:enemyStats(inspectedUnit, inspectedUnit.atkModeIsMelee)
+						else
+							enemystats = StatsOverlay:enemyStats(inspectedUnit, selectedUnit.atkModeIsMelee)
+						end
+						inspectedUnit:beInspected()
 						scene.view:insert(enemystats.group)
 						touch.hit = true
 					end
@@ -443,9 +489,45 @@ handleTouch = function(event)
 	end
 end
 
+function pickBestUnit(units)
+	local unitChoices = {}
+	local i
+	local maximum = 0
+	for i in pairs(units) do
+		if (units[i].stats.live.melee.atk > maximum) then
+			maximum = units[i].stats.live.melee.atk
+			unitChoices = {}
+			table.insert(unitChoices, units[i])
+		elseif (units[i].stats.live.melee.atk == maximum) then
+			table.insert(unitChoices, units[i])
+		end
+		if (units[i].stats.live.ranged.atk > maximum) then
+			maximum = units[i].stats.live.ranged.atk
+			unitChoices = {}
+			table.insert(unitChoices, units[i])
+		elseif (units[i].stats.live.ranged.atk == maximum) then
+			table.insert(unitChoices, units[i])
+		end
+	end
+	
+	return unitChoices[math.floor((math.random() * #unitChoices))+1]
+end
+
 doAI = function()
-	if not waitForAni then
+	local opposition, teammates = friends, enemies
+	local stopWaitingForAni = function()
+		print("stop waiting for animation")
+		waitForAni = false
+	end
+	
+	if not waitForAni and (#teammates) > 0 then
+		local unitChoice
 		
+		print("Doing AI")
+		unitChoice = pickBestUnit(enemies)
+		print("Chosen unit at "..unitChoice.pos.x..", "..unitChoice.pos.y)
+		waitForAni = true
+		timer.performWithDelay(1000, stopWaitingForAni, 1)
 	end
 end
 

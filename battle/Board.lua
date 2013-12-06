@@ -19,14 +19,16 @@ function Board.new(params)
 	newBoard.rangeTilesMove = {}
 	newBoard.rangeTilesAttack = {}
 	
-	local i, j
-	for i = 0, 7 do
-		for j = 0, 7 do
-			newBoard.rect = display.newRect(offsetX + 32*j, offsetY + 32* i, 32, 32)
-			newBoard.rect.strokeWidth = 2
-			newBoard.rect:setFillColor(0, 0, 0, 0)
-			newBoard.rect:setStrokeColor(255, 255, 255)
-			newBoard.group:insert(newBoard.rect)
+	if params.visible then
+		local i, j
+		for i = 0, 7 do
+			for j = 0, 7 do
+				newBoard.rect = display.newRect(offsetX + 32*j, offsetY + 32* i, 32, 32)
+				newBoard.rect.strokeWidth = 3
+				newBoard.rect:setFillColor(0, 0, 0, 0)
+				newBoard.rect:setStrokeColor(255, 255, 255)
+				newBoard.group:insert(newBoard.rect)
+			end
 		end
 	end
 	
@@ -108,6 +110,19 @@ function Board:destroyRangeVision()
 	self.rangeTileGroup:insert(self.rangeTileAttackGroup)
 	self.rangeTilesMove = {}
 	self.rangeTilesAttack = {}
+end
+
+function Board:getAvailableMoveLocations()
+	list = {}
+	local i, j
+	for i = 1, 8 do
+		for j = 1, 8 do
+			if self.rangeTilesMove[i][j].withinRange then
+				table.insert(list, {x = i-1, y = j-1})
+			end
+		end
+	end
+	return list
 end
 
 function Board:isItWithinMoveRange(loc)

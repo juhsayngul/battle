@@ -25,8 +25,10 @@ local gui, board
 local friends, enemies
 local selectedUnit, inspectedUnit
 
-local getUnits, getGroup, onEveryFrame, handleTouch, destroyMenu
-local stopWaitingForAni
+local getUnits, getGroup, onEveryFrame, handleTouch, createMenu, destroyMenu
+
+local unitChoice, unitVictim
+local uselessUnits = {}
 
 function scene:createScene(event)
     local screenGroup = self.view
@@ -36,8 +38,10 @@ function scene:createScene(event)
 	
 	levelGroup = display.newGroup()
 	
-	board = Board.new(params.boardParams)
+	board = Board.new({visible = true})
+	boardForAI = Board.new({visible = false})
 	gui = GUI.new(buttonListener, isOrangeTurn, false)
+	
 	
 	inspectingText = display.newText(" ", 0, 0, native.systemFontBold, 12)
 	inspectingText.x, inspectingText.y = 160, 442
@@ -135,11 +139,21 @@ local function quitInspecting()
 	end
 end
 
-local function createMenu(touchedUnit)
+createMenu = function(touchedUnit)
 	selectedUnit = touchedUnit
 	selectedUnit.defending = false
 	menu = Menu.new(buttonListener, selectedUnit)
 	stats = StatsOverlay.new(selectedUnit)
+	if enemystats ~= nil and inspectedUnit ~= nil then
+		enemystats:destroy()
+		if selectedUnit == nil then
+			enemystats = StatsOverlay:enemyStats(inspectedUnit, inspectedUnit.atkModeIsMelee)
+		else
+			enemystats = StatsOverlay:enemyStats(inspectedUnit, selectedUnit.atkModeIsMelee)
+		end
+		inspectedUnit:beInspected()
+		scene.view:insert(enemystats.group)
+	end
 	scene.view:insert(menu.group)
 	scene.view:insert(stats.group)
 end
@@ -223,6 +237,17 @@ buttonListener.switchAtk = function (event)
 		end
 		selectedUnit:switchAtk()
 		refreshRangeDisplay()
+		if enemystats ~= nil then
+			enemystats:destroy()
+		end
+		if inspectedUnit ~= nil then
+			if selectedUnit == nil then
+				enemystats = StatsOverlay:enemyStats(inspectedUnit, inspectedUnit.atkModeIsMelee)
+			else
+				enemystats = StatsOverlay:enemyStats(inspectedUnit, selectedUnit.atkModeIsMelee)
+			end
+			scene.view:insert(enemystats.group)
+		end
 	end
 end
 
@@ -286,30 +311,51 @@ getGroup = function (units)
 end
 
 onEveryFrame = function(event)
+	if enemystats == nil then
+		if inspectedUnit ~= nil then
+			inspectedUnit:stopBeingInspected()
+		end
+	end
 	if (selectedUnit ~= nil) then
 		if (selectedUnit.stats.live.moves == 0) then
 			cancelled = true
 			local i
 			if isOrangeTurn then
+				gui:switchTurn()
+				cancelled = true
+				local i
 				for i in pairs(enemies) do
 					enemies[i]:resetDefending()
 					enemies[i]:resetMoves()
 					enemies[i]:resetControlModes()
 				end
 				isOrangeTurn = false
-			else
-				for i in pairs(friends) do
-					friends[i]:resetDefending()
-					friends[i]:resetMoves()
-					friends[i]:resetControlModes()
+				quitInspecting()
+				if enemystats ~= nil then
+					enemystats:destroy()
 				end
-				isOrangeTurn = true
+				inspectedUnit = nil
+				local stopWaitingForAni = function()
+					waitForAni = false
+				end
+				waitForAni = true
+				timer.performWithDelay(1000, stopWaitingForAni)
+			-- else
+				-- gui:switchTurn()
+				-- cancelled = true
+				-- local i
+				-- for i in pairs(friends) do
+					-- friends[i]:resetDefending()
+					-- friends[i]:resetMoves()
+					-- friends[i]:resetControlModes()
+				-- end
+				-- isOrangeTurn = true
+				-- quitInspecting()
+				-- if enemystats ~= nil then
+					-- enemystats:destroy()
+				-- end
+				-- inspectedUnit = nil
 			end
-			quitInspecting()
-			if enemystats ~= nil then
-				enemystats:destroy()
-			end
-			gui:switchTurn()
 		end
 	end
 	if cancelled then
@@ -362,7 +408,11 @@ handleTouch = function(event)
 							if enemystats ~= nil then
 								enemystats:destroy()
 							end
-							enemystats = StatsOverlay:enemyStats(opposition[i])
+							if selectedUnit == nil then
+								enemystats = StatsOverlay:enemyStats(opposition[i], opposition[i].atkModeIsMelee)
+							else
+								enemystats = StatsOverlay:enemyStats(opposition[i], selectedUnit.atkModeIsMelee)
+							end
 							inspectedUnit = opposition[i]
 							inspectedUnit:beInspected()
 							scene.view:insert(enemystats.group)
@@ -377,7 +427,11 @@ handleTouch = function(event)
 								end
 								inspectedUnit = teammates[i]
 								inspectedUnit:beInspected()
-								enemystats = StatsOverlay:enemyStats(teammates[i])
+								if selectedUnit == nil then
+									enemystats = StatsOverlay:enemyStats(teammates[i], teammates[i].atkModeIsMelee)
+								else
+									enemystats = StatsOverlay:enemyStats(teammates[i], selectedUnit.atkModeIsMelee)
+								end
 								scene.view:insert(enemystats.group)
 								touch.hit = true
 							end
@@ -413,7 +467,13 @@ handleTouch = function(event)
 							inspectedUnit:stopBeingInspected()
 						end
 						audio.play(sfx.click)
-						enemystats = StatsOverlay:enemyStats(opposition[i])
+						inspectedUnit = opposition[i]
+						if selectedUnit == nil then
+							enemystats = StatsOverlay:enemyStats(inspectedUnit, inspectedUnit.atkModeIsMelee)
+						else
+							enemystats = StatsOverlay:enemyStats(inspectedUnit, selectedUnit.atkModeIsMelee)
+						end
+						inspectedUnit:beInspected()
 						scene.view:insert(enemystats.group)
 						touch.hit = true
 					end
@@ -428,6 +488,7 @@ handleTouch = function(event)
 				end
 				if inspectedUnit ~= nil then
 					inspectedUnit:stopBeingInspected()
+					inspectedUnit = nil
 				end
 			end
 			
@@ -449,14 +510,185 @@ handleTouch = function(event)
 	end
 end
 
-doAI = function()
-	if not waitForAni then
-		
+local function pickBestUnit(units)
+	local unitChoices = {}
+	local i
+	local maximum = 0
+	for i in pairs(units) do
+		if (units[i].stats.live.melee.atk*3 + units[i].stats.live.moves*2 + units[i].stats.live.health > maximum) then
+			maximum = units[i].stats.live.melee.atk*3 + units[i].stats.live.moves*2 + units[i].stats.live.health
+			unitChoices = {}
+			table.insert(unitChoices, units[i])
+		elseif (units[i].stats.live.melee.atk*3 + units[i].stats.live.moves*2 + units[i].stats.live.health == maximum) then
+			table.insert(unitChoices, units[i])
+		end
+		if (units[i].stats.live.melee.atk*3 + units[i].stats.live.moves*2 + units[i].stats.live.health > maximum) then
+			maximum = units[i].stats.live.melee.atk*3 + units[i].stats.live.moves*2 + units[i].stats.live.health
+			unitChoices = {}
+			table.insert(unitChoices, units[i])
+		elseif (units[i].stats.live.melee.atk*3 + units[i].stats.live.moves*2 + units[i].stats.live.health == maximum) then
+			table.insert(unitChoices, units[i])
+		end
 	end
+	
+	return unitChoices[math.floor((math.random() * #unitChoices))+1]
 end
 
-stopWaitingForAni = function()
-	local waitForAni = false
+local function pickClosestWeakestOpposingUnit(melee, loc, units)
+	local weakUnits = {}
+	local i
+	local minimum = 5
+	for i in pairs(units) do
+		if melee then
+			if (units[i].stats.live.melee.def < minimum) then
+				minimum = units[i].stats.live.melee.def
+				weakUnits = {}
+				table.insert(weakUnits, units[i])
+			elseif (units[i].stats.live.melee.def == minimum) then
+				table.insert(weakUnits, units[i])
+			end
+		else
+			if (units[i].stats.live.ranged.def < minimum) then
+				minimum = units[i].stats.live.ranged.def
+				weakUnits = {}
+				table.insert(weakUnits, units[i])
+			elseif (units[i].stats.live.ranged.def == minimum) then
+				table.insert(weakUnits, units[i])
+			end
+		end
+	end
+	
+	minimum = 15
+	local closeWeakUnits = {}
+	for i in pairs(weakUnits) do
+		if (weakUnits[i]:distanceTo(loc) < minimum) then
+			minimum = weakUnits[i]:distanceTo(loc)
+			closeWeakUnits = {}
+			table.insert(closeWeakUnits, weakUnits[i])
+		elseif (weakUnits[i]:distanceTo(loc) == minimum) then
+			table.insert(closeWeakUnits, weakUnits[i])
+		end
+	end
+	
+	return closeWeakUnits[math.floor((math.random() * #closeWeakUnits))+1]
+end
+
+local function pickClosestLocationToUnit(locations, unit)
+	local closeLocations = {}
+	local minimum = 15
+	local i
+	for i in pairs(locations) do
+		if (unit:distanceTo(locations[i]) < minimum) then
+			minimum = unit:distanceTo(locations[i])
+			closeLocations = {}
+			table.insert(closeLocations, locations[i])
+		elseif (unit:distanceTo(locations[i]) == minimum) then
+			table.insert(closeLocations, locations[i])
+		end
+	end
+	return closeLocations[math.floor((math.random() * #closeLocations))+1]
+end
+
+doAI = function()
+	local opposition, teammates = friends, enemies
+	local stopWaitingForAni = function()
+		waitForAni = false
+	end
+	
+	local doWait = true
+	local movesNow
+	local death = false
+	
+	if not gamePaused and not waitForAni and (#teammates > 0) then
+		if unitChoice == nil then
+			unitChoice = pickBestUnit(enemies)
+		end
+		if unitVictim == nil then
+			unitVictim = pickClosestWeakestOpposingUnit(unitChoice.atkModeIsMelee, unitChoice.pos, opposition)
+		end
+		movesNow = unitChoice.stats.live.moves
+		if (movesNow > 0) and (#opposition > 0) then
+			boardForAI:drawAttackRange(unitChoice, opposition, false)
+			
+			if boardForAI:isItWithinAttackRange(unitVictim.pos) then
+				unitChoice:tryAttack(unitVictim.pos, opposition, boardForAI:isItWithinAttackRange(unitVictim.pos))
+			end
+			
+			local i
+			for i in pairs(opposition) do
+				if opposition[i].toDie then
+					table.remove(opposition, i)
+					death = true
+				end
+			end
+			for i in pairs(teammates) do
+				if teammates[i].toDie then
+					table.remove(teammates, i)
+					death = true
+				end
+			end
+			
+			boardForAI:drawMoveRange(unitChoice, teammates, opposition, false)
+			
+			local locations = boardForAI:getAvailableMoveLocations()
+			local closest = pickClosestLocationToUnit(locations, unitVictim)
+			
+			if not death and closest ~= nil then
+				if (movesNow == unitChoice.stats.live.moves) then
+					unitChoice:tryMove(closest, boardForAI:isItWithinMoveRange(closest), boardForAI:getNumMovesTo(closest))
+				end
+			end
+			
+			if (movesNow == unitChoice.stats.live.moves) then
+				print(#teammates.." teammates now.")
+				table.insert(uselessUnits, unitChoice)
+				local i, j
+				for i in pairs(uselessUnits) do
+					for j in pairs(teammates) do
+						if (teammates[j]:distanceTo(uselessUnits[i].pos) == 0) then
+							table.remove(teammates, j)
+						end
+					end
+				end
+				print(#teammates.." teammates now.")
+				unitChoice = pickBestUnit(teammates)
+				for i in pairs(uselessUnits) do
+					table.insert(teammates, uselessUnits[i])
+				end
+				print(#teammates.." teammates now.")
+				doWait = false
+			end
+			
+			boardForAI:destroyRangeVision()
+			print("Chosen unit at "..unitChoice.pos.x..", "..unitChoice.pos.y)
+			print("Victim unit at "..unitVictim.pos.x..", "..unitVictim.pos.y)
+			print(unitChoice.stats.live.moves.." moves left")
+			if not death and closest ~= nil then
+				print("Closest move spot at "..closest.x..", "..closest.y)
+			end
+		end
+		
+		if (unitChoice.stats.live.moves == 0) then
+			gui:switchTurn()
+			cancelled = true
+			local i
+			for i in pairs(friends) do
+				friends[i]:resetDefending()
+				friends[i]:resetMoves()
+				friends[i]:resetControlModes()
+			end
+			isOrangeTurn = true
+			unitChoice = nil
+			unitVictim = nil
+			uselessUnits = {}
+		end
+		
+		if doWait then
+			waitForAni = true
+			timer.performWithDelay(1000, stopWaitingForAni)
+		end
+		checkIfEnded()
+	end
 end
 
 scene:addEventListener("createScene", scene)

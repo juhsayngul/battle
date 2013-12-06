@@ -110,7 +110,7 @@ function scene:enterScene(event)
 	
 	if winnerTrophy == nil then
 		if winner then
-			winnerTrophy = display.newImage("assets/trophy.png", 10, 10)
+			winnerTrophy = display.newImage("assets/trophy.png", 20, 20)
 			screenGroup:insert(winnerTrophy)
 		end
 	end
@@ -186,7 +186,6 @@ twoPlayerTouch = function(event)
 			}
 		}
 		storyboard.gotoScene("Two-Player", options)
-		print ("Going to two player")
 	end
 end
 
