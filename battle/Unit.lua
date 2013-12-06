@@ -77,12 +77,10 @@ function Unit:tryMove(touch, isInRange)
 		self.anim.x = (touch.x * 32) + 32
 		self.anim.y = (touch.y * 32) + 60
 		
-		print(self.unitType)
 		sfx.playMoveSound(self.unitType)
 	else
 		audio.play(sfx.badMove)
 	end
-	
 end
 
 function Unit:tryAttack(touch, enemies, isInRange)
@@ -125,14 +123,15 @@ function Unit:takeDamage(isMelee, attackPower)
 	flashDamageAmount(self, damageAmount)
 	if (self.stats.live.health <= 0) then
 		self:die()
-		sfx.playDeathSound(self.unitType)
 	else
 		flashAttackIndicator(self)
 	end
 end
 
 function Unit:die()
+	sfx.playDeathSound(self.unitType)
 	self:resetDefending()
+	self:stopBeingInspected()
 	self.anim:removeSelf()
 	self.toDie = true
 	showDeathAnimation(self)
@@ -171,6 +170,21 @@ function Unit:defend()
 	end
 	self.defending = true
 	self.stats.live.moves = 0
+end
+
+function Unit:beInspected()
+	if self.inspectImage == nil then
+		self.inspectImage = display.newImage("assets/inspect_symbol.png", self.anim.x, self.anim.y)
+		self.group:insert(self.inspectImage)
+		self.inspectImage:toFront()
+	end
+end
+
+function Unit:stopBeingInspected()
+	if self.inspectImage ~= nil then
+		display.remove(self.inspectImage)
+	end
+	self.inspectImage = nil
 end
 
 showDeathAnimation = function(dyingUnit)

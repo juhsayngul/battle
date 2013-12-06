@@ -182,20 +182,14 @@ local function win()
 	local options = {
 		effect = "fromBottom",
 		time = 300,
-		params = {destination = "Title-Screen"},
+		params = {destination = "Two-Player"},
 		isModal = true
 	}
 	storyboard.showOverlay("Win-Overlay", options)
 end
 
 local function lose()
-	local options = {
-		effect = "fromBottom",
-		time = 300,
-		params = {destination = "Title-Screen"},
-		isModal = true
-	}
-	storyboard.showOverlay("Lose-Overlay", options)
+	win()
 end
 
 local function checkIfEnded()
@@ -256,7 +250,7 @@ buttonListener.pause = function (event)
 		local options = {
 			effect = "fromBottom",
 			time = 100,
-			params = {destination = "Title-Screen"},
+			params = {destination = "Two-Player"},
 			isModal = true
 		}
 		storyboard.showOverlay("Pause-Overlay", options)

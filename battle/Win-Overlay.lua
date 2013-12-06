@@ -1,22 +1,32 @@
 local storyboard = require( "storyboard" )
+local sfx = require("sfx")
 
 local scene = storyboard.newScene()
 
-local continueButton
+local continueButton, winText
+
+local destination
 
 function scene:createScene(event)
     local screenGroup = self.view
 	
-	continueButton = display.newImage("assets/resume_button.png", 60, 175)
+	winText = display.newText("YOU WIN!", 0, 0, native.systemFontBold, 22)
+	winText.x, winText.y = 230, 30
+	winText:setTextColor(0, 255, 0)
+	
+	continueButton = display.newImage("assets/quit_button.png", 60, 175)
+	
+	continueButton.x, continueButton.y = 160, 190
+	
+	screenGroup:insert(winText)
 	screenGroup:insert(continueButton)
 	continueButton:toFront()
-	
-	-- "You won"
-	-- Continue
 end
 
 function scene:enterScene(event)
     local screenGroup = self.view
+	
+	destination = event.params.destination
 	
 	continueButton:addEventListener("touch", continueTouch)
 end
@@ -29,6 +39,7 @@ end
 
 continueTouch = function(event)
 	if event.phase == "began" then
+		audio.play(sfx.click)
 		local options = {
 			effect = "slideDown",
 			time = 300,
@@ -37,7 +48,7 @@ continueTouch = function(event)
 				removeLevelScene = true
 			}
 		}
-		storyboard.gotoScene("Title-Screen", options)
+		storyboard.gotoScene(destination, options)
 	end
 end
 

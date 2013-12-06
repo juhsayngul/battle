@@ -1,5 +1,6 @@
 local storyboard = require( "storyboard" )
 local LevelParams = require("LevelParams")
+local sfx = require("sfx")
 
 local scene = storyboard.newScene()
 
@@ -42,6 +43,7 @@ end
 
 screenTouch = function(event)
 	if event.phase == "began" then
+		audio.play(sfx.click)
 		if (event.x < (_W/2)) then
 			if currentPage > 1 then
 				options = {

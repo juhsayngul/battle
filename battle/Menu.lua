@@ -46,7 +46,8 @@ function Menu.new(buttonListener, selectedUnit)
 	newMenu.button.group:insert(newMenu.button.defend)
 	newMenu.button.group:insert(newMenu.button.cancel)
 	
-	newMenu.moveText = display.newText("Moves remaining: " .. selectedUnit.stats.live.moves, 185, 25, native.systemFontBold, 12)
+	newMenu.moveText = display.newText("Moves remaining: " .. selectedUnit.stats.live.moves, 0, 0, native.systemFontBold, 12)
+	newMenu.moveText.x, newMenu.moveText.y = 250, 460
 	
 	newMenu.group:insert(newMenu.button.group)
 	newMenu.group:insert(newMenu.moveText)
@@ -71,10 +72,8 @@ function Menu:switchMov(buttonListener, move)
 	self.button.switchMov:removeSelf()
 	self.button.switchMov = nil
 	if move then
-		self.moveText.text = "Where will you move to?"
 		self.button.switchMov = display.newImage("assets/attack.png", 32, 325)
 	else
-		self.moveText.text = "Attack whom"
 		self.button.switchMov = display.newImage("assets/move.png", 32, 325)
 	end
 	self.button.group:insert(newMenu.button.switchMov)

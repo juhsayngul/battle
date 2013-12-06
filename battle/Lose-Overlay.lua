@@ -1,22 +1,32 @@
 local storyboard = require( "storyboard" )
+local sfx = require("sfx")
 
 local scene = storyboard.newScene()
 
-local retryButton
+local retryButton, loseText
+
+local destination
 
 function scene:createScene(event)
     local screenGroup = self.view
 	
-	retryButton = display.newImage("assets/restart_button.png", 60, 175)
+	loseText = display.newText("YOU LOSE!", 0, 0, native.systemFontBold, 22)
+	loseText.x, loseText.y = 220, 30
+	loseText:setTextColor(255, 0, 0)
+	
+	retryButton = display.newImage("assets/quit_button.png", 60, 175)
+	
+	retryButton.x, retryButton.y = 160, 190
+	
+	screenGroup:insert(loseText)
 	screenGroup:insert(retryButton)
 	retryButton:toFront()
-	
-	-- "You lose"
-	-- Retry
 end
 
 function scene:enterScene(event)
     local screenGroup = self.view
+	
+	destination = event.params.destination
 	
 	retryButton:addEventListener("touch", retryTouch)
 end
@@ -29,6 +39,7 @@ end
 
 retryTouch = function(event)
 	if event.phase == "began" then
+		audio.play(sfx.click)
 		local options = {
 			effect = "slideDown",
 			time = 300,
@@ -37,7 +48,7 @@ retryTouch = function(event)
 				removeLevelScene = true
 			}
 		}
-		storyboard.gotoScene("Title-Screen", options)
+		storyboard.gotoScene(destination, options)
 	end
 end
 
