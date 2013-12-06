@@ -163,7 +163,7 @@ howToTouch = function(event)
 			effect = "slideRight",
 			time = 300,
 			params = {
-				finalPage = 4,
+				finalPage = 5,
 				page = 1
 			}
 		}
