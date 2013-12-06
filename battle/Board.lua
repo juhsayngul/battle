@@ -47,7 +47,7 @@ function Board:drawMoveRange(selectedUnit, friends, enemies, isVisible)
 		end
 	end
 	self.rangeTilesMove[selectedUnit.pos.x+1][selectedUnit.pos.y+1].isOccupied = false
-	activateTile(selectedUnit.pos, self.rangeTilesMove, selectedUnit.stats.live.moves+1)
+	activateTile(selectedUnit.pos, self.rangeTilesMove, selectedUnit.stats.live.moves, selectedUnit.stats.live.moves)
 	self.rangeTilesMove[selectedUnit.pos.x+1][selectedUnit.pos.y+1].withinRange = false
 	for i = 1, 8 do
 		for j = 1, 8 do
@@ -87,8 +87,9 @@ function Board:drawAttackRange(selectedUnit, enemies, isVisible)
 		for j = 1, 8 do
 			if self.rangeTilesAttack[i][j].withinRange then
 				box = display.newRect(offsetX + 32*(i-1), offsetY + 32*(j-1), 32, 32)
-				box:setFillColor(255, 0, 0)
-				box.alpha = 0.5
+				box.strokeWidth = 2
+				box:setFillColor(0, 0, 0, 1)
+				box:setStrokeColor(255, 0, 0)
 				if not isVisible then
 					box.alpha = 0
 				end
@@ -111,6 +112,10 @@ end
 
 function Board:isItWithinMoveRange(loc)
 	return self.rangeTilesMove[loc.x+1][loc.y+1].withinRange
+end
+
+function Board:getNumMovesTo(loc)
+	return self.rangeTilesMove[loc.x+1][loc.y+1].numMoves
 end
 
 function Board:isItWithinAttackRange(loc)
@@ -141,20 +146,26 @@ initRangeTiles = function (rangeTiles, units)
 	end
 end
 
-activateTile = function (position, rangeTiles, numMovesLeft)
-	if not rangeTiles[position.x+1][position.y+1].isOccupied and (numMovesLeft > 0) then
+activateTile = function (position, rangeTiles, numMovesLeft, numMovesMax)
+	if not rangeTiles[position.x+1][position.y+1].isOccupied and (numMovesLeft >= 0) then
+		if rangeTiles[position.x+1][position.y+1].numMoves == nil then
+			rangeTiles[position.x+1][position.y+1].numMoves = numMovesMax - numMovesLeft
+		end
+		if rangeTiles[position.x+1][position.y+1].numMoves > (numMovesMax - numMovesLeft) then
+			rangeTiles[position.x+1][position.y+1].numMoves = numMovesMax - numMovesLeft
+		end
 		rangeTiles[position.x+1][position.y+1].withinRange = true
 		if (position.x > 0) then
-			activateTile({x = position.x - 1, y = position.y}, rangeTiles, numMovesLeft - 1)
+			activateTile({x = position.x - 1, y = position.y}, rangeTiles, numMovesLeft - 1, numMovesMax)
 		end
 		if (position.x < 7) then
-			activateTile({x = position.x + 1, y = position.y}, rangeTiles, numMovesLeft - 1)
+			activateTile({x = position.x + 1, y = position.y}, rangeTiles, numMovesLeft - 1, numMovesMax)
 		end
 		if (position.y > 0) then
-			activateTile({x = position.x, y = position.y - 1}, rangeTiles, numMovesLeft - 1)
+			activateTile({x = position.x, y = position.y - 1}, rangeTiles, numMovesLeft - 1, numMovesMax)
 		end
 		if (position.y < 7) then
-			activateTile({x = position.x, y = position.y + 1}, rangeTiles, numMovesLeft - 1)
+			activateTile({x = position.x, y = position.y + 1}, rangeTiles, numMovesLeft - 1, numMovesMax)
 		end
 	end
 end

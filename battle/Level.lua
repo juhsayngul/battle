@@ -368,6 +368,8 @@ handleTouch = function(event)
 							scene.view:insert(enemystats.group)
 							touch.hit = true
 						end
+					end
+					for i in pairs(teammates) do
 						if teammates[i]:isAt(touch) and not touch.hit then
 							if not (teammates[i].pos.x == selectedUnit.pos.x and teammates[i].pos.y == selectedUnit.pos.y) then
 								if enemystats ~= nil then
@@ -383,7 +385,7 @@ handleTouch = function(event)
 					end
 				else
 					if selectedUnit.movModeIsMove then
-						selectedUnit:tryMove(touch, board:isItWithinMoveRange({x = touch.x, y = touch.y}))
+						selectedUnit:tryMove(touch, board:isItWithinMoveRange({x = touch.x, y = touch.y}), board:getNumMovesTo({x = touch.x, y = touch.y}))
 					elseif not (selectedUnit.movModeIsMove or (menu == nil)) then
 						selectedUnit:tryAttack(touch, opposition, board:isItWithinAttackRange({x = touch.x, y = touch.y}))
 					end

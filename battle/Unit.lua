@@ -67,11 +67,11 @@ function Unit:switchMov()
 	end
 end
 
-function Unit:tryMove(touch, isInRange)
+function Unit:tryMove(touch, isInRange, numMovesTo)
 	self:directFace(touch)
 	
 	if isInRange then
-		self.stats.live.moves = self.stats.live.moves - self:distanceTo(touch)
+		self.stats.live.moves = self.stats.live.moves - numMovesTo
 		self.pos.x = touch.x
 		self.pos.y = touch.y
 		self.anim.x = (touch.x * 32) + 32
@@ -123,9 +123,8 @@ function Unit:takeDamage(isMelee, attackPower)
 	flashDamageAmount(self, damageAmount)
 	if (self.stats.live.health <= 0) then
 		self:die()
-	else
-		flashAttackIndicator(self)
 	end
+	flashAttackIndicator(self)
 end
 
 function Unit:die()
@@ -188,35 +187,44 @@ function Unit:stopBeingInspected()
 end
 
 showDeathAnimation = function(dyingUnit)
-	aniWidth = 5 -- these variables are dummies, they should really be the dimensions of the animation graphic
-	aniHeight = 5
 	local animationLocX = (dyingUnit.pos.x * 32) + 32
 	local animationLocY = (dyingUnit.pos.y * 32) + 60
-	-- create a graphic whose animation ends with a few frames of nothing so that we can calibrate the wait time
+	
 	local graphic = display.newRect(animationLocX, animationLocY, 32, 32)
 	graphic.strokeWidth = 2
 	graphic:setFillColor(0, 0, 0, 1)
 	graphic:setStrokeColor(255, 0, 0)
-	-- animation ideas... poof! they're gone
-	-- graphic location should be at animationLocX/animationLocY variables above
-	-- 		which should be a random spot over the target unit
+	
 	dyingUnit.group:insert(graphic)
 	graphic:toFront()
-	local function destroy ()
-		display.remove(graphic)
+	local maxCountdown = 16
+	local countdown = maxCountdown
+	local function onEveryFrame()
+		if (countdown == 0) then
+			display.remove(graphic)
+			Runtime:removeEventListener("enterFrame", onEveryFrame)
+		else
+			if (graphic.xScale * graphic.yScale > 0) then
+				graphic.xScale = graphic.xScale - 1/maxCountdown
+				graphic.yScale = graphic.yScale - 1/maxCountdown
+			end
+		end
+		countdown = countdown - 1
 	end
-	timer.performWithDelay(500, destroy) -- rough delay time amount, should actually reflect full amount of animation
+	Runtime:addEventListener("enterFrame", onEveryFrame)
 end
 
 flashDamageAmount = function(targetedUnit, damageAmount)
-	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random() * (32 - 20)) + 32
-	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random() * (36 - 20)) + 60 - 16 
-	local text = display.newText("-" .. damageAmount, animationLocX, animationLocY, native.systemFontBold, 16)
-	-- rough positioning and text parameters but it works and looks neat enough
+	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random()*32) + 32
+	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random()*36) + 60 - 16 
+	local text = display.newText("-" .. damageAmount, 0, 0, native.systemFontBold, 16)
+	text.x = animationLocX
+	text.y = animationLocY
+	
 	text:setTextColor(255, 255, 255)
 	targetedUnit.group:insert(text)
 	text:toFront()
-	local maxCountdown = 24
+	local maxCountdown = 32
 	local countdown = maxCountdown
 	local function onEveryFrame()
 		if (countdown == 0) then
@@ -234,17 +242,15 @@ flashDamageAmount = function(targetedUnit, damageAmount)
 end
 
 flashAttackIndicator = function(targetedUnit)
-	aniWidth = 5 -- these variables are dummies, they should really be the dimensions of the animation graphic
-	aniHeight = 5
-	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random() * (32 - aniWidth)) + 32
-	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random() * (36 - aniHeight)) + 60
-	-- create a graphic whose animation ends with a few frames of nothing so that we can calibrate the wait time
+	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random()*20) + 32 + 6
+	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random()*20) + 60 + 6
+	
 	local sheetdata = {width = 16, height = 20, numFrames = 4, sheetContentWidth = 64, sheetContentHeight = 20}
 	local options = 
 	{
 		name = "hit",
 		frames = {1, 2, 3, 4},
-		time = 50,
+		time = 160,
 		loopCount = 1
 	}
 	local imageSheet = graphics.newImageSheet("assets/hit.png", sheetdata)
