@@ -21,23 +21,18 @@ local levelBoxTouch = {}
 function scene:createScene(event)
     local screenGroup = self.view
 	
-	local boxWidth = 115
-	
 	levelBoxes = {}
-	levelBoxes[1] = display.newRect(0, 0, boxWidth, boxWidth)
-	levelBoxes[1]:setFillColor(255, 0, 0)
+	
+	levelBoxes[1] = display.newImage("assets/2P-1.png", 0, 0)
 	levelBoxes[1].x, levelBoxes[1].y = 2.5*_W/9, 3*_H/9
 	
-	levelBoxes[2] = display.newRect(0, 0, boxWidth, boxWidth)
-	levelBoxes[2]:setFillColor(0, 255, 0)
+	levelBoxes[2] = display.newImage("assets/2P-2.png", 0, 0)
 	levelBoxes[2].x, levelBoxes[2].y = 6.5*_W/9, 3*_H/9
 	
-	levelBoxes[3] = display.newRect(0, 0, boxWidth, boxWidth)
-	levelBoxes[3]:setFillColor(0, 0, 255)
+	levelBoxes[3] = display.newImage("assets/2P-3.png", 0, 0)
 	levelBoxes[3].x, levelBoxes[3].y = 2.5*_W/9, 5.7*_H/9
 	
-	levelBoxes[4] = display.newRect(0, 0, boxWidth, boxWidth)
-	levelBoxes[4]:setFillColor(255, 255, 0)
+	levelBoxes[4] = display.newImage("assets/2P-4.png", 0, 0)
 	levelBoxes[4].x, levelBoxes[4].y = 6.5*_W/9, 5.7*_H/9
 	
 	headerText = display.newText("TWO-PLAYER MODE", 0, 0, native.systemFontBold, 22)
@@ -71,7 +66,7 @@ function scene:enterScene(event)
 	levelBoxes[2]:addEventListener("touch", levelBoxTouch[2])
 	levelBoxes[3]:addEventListener("touch", levelBoxTouch[3])
 	levelBoxes[4]:addEventListener("touch", levelBoxTouch[4])
-	returnButton:addEventListener("touch", continueTouch)
+	returnButton:addEventListener("touch", returnTouch)
 end
 
 function scene:exitScene(event)
@@ -81,18 +76,16 @@ function scene:exitScene(event)
 	levelBoxes[2]:removeEventListener("touch", levelBoxTouch[2])
 	levelBoxes[3]:removeEventListener("touch", levelBoxTouch[3])
 	levelBoxes[4]:removeEventListener("touch", levelBoxTouch[4])
-	returnButton:removeEventListener("touch", continueTouch)
+	returnButton:removeEventListener("touch", returnTouch)
 end
 
-continueTouch = function(event)
+returnTouch = function(event)
 	if event.phase == "began" then
 		audio.play(sfx.click)
 		local options = {
 			effect = "slideDown",
 			time = 300,
-			params = {
-				removeTwoPlayerScene = true
-			}
+			params = {removeTwoPlayerScene = true}
 		}
 		storyboard.gotoScene("Title-Screen", options)
 	end

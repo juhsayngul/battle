@@ -26,7 +26,6 @@ local friends, enemies
 local selectedUnit, inspectedUnit
 
 local getUnits, getGroup, onEveryFrame, handleTouch, createMenu, destroyMenu
-local stopWaitingForAni
 
 function scene:createScene(event)
     local screenGroup = self.view
@@ -36,8 +35,10 @@ function scene:createScene(event)
 	
 	levelGroup = display.newGroup()
 	
-	board = Board.new(params.boardParams)
+	board = Board.new({visible = true})
+	boardForAI = Board.new({visible = false})
 	gui = GUI.new(buttonListener, isOrangeTurn, false)
+	
 	
 	inspectingText = display.newText(" ", 0, 0, native.systemFontBold, 12)
 	inspectingText.x, inspectingText.y = 160, 442
@@ -192,20 +193,14 @@ local function win()
 	local options = {
 		effect = "fromBottom",
 		time = 300,
-		params = {destination = "Title-Screen"},
+		params = {destination = "Two-Player"},
 		isModal = true
 	}
 	storyboard.showOverlay("Win-Overlay", options)
 end
 
 local function lose()
-	local options = {
-		effect = "fromBottom",
-		time = 300,
-		params = {destination = "Title-Screen"},
-		isModal = true
-	}
-	storyboard.showOverlay("Lose-Overlay", options)
+	win()
 end
 
 local function checkIfEnded()
@@ -277,7 +272,7 @@ buttonListener.pause = function (event)
 		local options = {
 			effect = "fromBottom",
 			time = 100,
-			params = {destination = "Title-Screen"},
+			params = {destination = "Two-Player"},
 			isModal = true
 		}
 		storyboard.showOverlay("Pause-Overlay", options)
@@ -317,25 +312,36 @@ onEveryFrame = function(event)
 			cancelled = true
 			local i
 			if isOrangeTurn then
+				gui:switchTurn()
+				cancelled = true
+				local i
 				for i in pairs(enemies) do
 					enemies[i]:resetDefending()
 					enemies[i]:resetMoves()
 					enemies[i]:resetControlModes()
 				end
 				isOrangeTurn = false
+				quitInspecting()
+				if enemystats ~= nil then
+					enemystats:destroy()
+				end
+				inspectedUnit = nil
 			else
+				gui:switchTurn()
+				cancelled = true
+				local i
 				for i in pairs(friends) do
 					friends[i]:resetDefending()
 					friends[i]:resetMoves()
 					friends[i]:resetControlModes()
 				end
 				isOrangeTurn = true
+				quitInspecting()
+				if enemystats ~= nil then
+					enemystats:destroy()
+				end
+				inspectedUnit = nil
 			end
-			quitInspecting()
-			if enemystats ~= nil then
-				enemystats:destroy()
-			end
-			gui:switchTurn()
 		end
 	end
 	if cancelled then
@@ -352,9 +358,6 @@ onEveryFrame = function(event)
 				refreshRangeDisplay()
 			end
 		end
-	end
-	if not isOrangeTurn then
-		doAI()
 	end
 end
 
@@ -468,6 +471,7 @@ handleTouch = function(event)
 				end
 				if inspectedUnit ~= nil then
 					inspectedUnit:stopBeingInspected()
+					inspectedUnit = nil
 				end
 			end
 			
@@ -487,52 +491,6 @@ handleTouch = function(event)
 			checkIfEnded()
 		end
 	end
-end
-
-function pickBestUnit(units)
-	local unitChoices = {}
-	local i
-	local maximum = 0
-	for i in pairs(units) do
-		if (units[i].stats.live.melee.atk > maximum) then
-			maximum = units[i].stats.live.melee.atk
-			unitChoices = {}
-			table.insert(unitChoices, units[i])
-		elseif (units[i].stats.live.melee.atk == maximum) then
-			table.insert(unitChoices, units[i])
-		end
-		if (units[i].stats.live.ranged.atk > maximum) then
-			maximum = units[i].stats.live.ranged.atk
-			unitChoices = {}
-			table.insert(unitChoices, units[i])
-		elseif (units[i].stats.live.ranged.atk == maximum) then
-			table.insert(unitChoices, units[i])
-		end
-	end
-	
-	return unitChoices[math.floor((math.random() * #unitChoices))+1]
-end
-
-doAI = function()
-	local opposition, teammates = friends, enemies
-	local stopWaitingForAni = function()
-		print("stop waiting for animation")
-		waitForAni = false
-	end
-	
-	if not waitForAni and (#teammates) > 0 then
-		local unitChoice
-		
-		print("Doing AI")
-		unitChoice = pickBestUnit(enemies)
-		print("Chosen unit at "..unitChoice.pos.x..", "..unitChoice.pos.y)
-		waitForAni = true
-		timer.performWithDelay(1000, stopWaitingForAni, 1)
-	end
-end
-
-stopWaitingForAni = function()
-	local waitForAni = false
 end
 
 scene:addEventListener("createScene", scene)

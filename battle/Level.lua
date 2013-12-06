@@ -11,6 +11,7 @@ local scene = storyboard.newScene()
 local cancelled = false
 local inspecting = false
 local gamePaused = false
+local gameOver = false
 local waitForAni = false
 
 local inspectingText
@@ -29,6 +30,7 @@ local getUnits, getGroup, onEveryFrame, handleTouch, createMenu, destroyMenu
 
 local unitChoice, unitVictim
 local uselessUnits = {}
+local boardForAI
 
 function scene:createScene(event)
     local screenGroup = self.view
@@ -215,8 +217,10 @@ end
 local function checkIfEnded()
 	if #enemies < 1 then
 		win()
+		gameOver = true
 	elseif #friends < 1 then
 		lose()
+		gameOver = true
 	end
 end
 
@@ -396,7 +400,7 @@ handleTouch = function(event)
 		hit = false
 	}
 	
-	if event.phase == "began" then
+	if event.phase == "began" and isOrangeTurn and not gameOver then
 		--if grid is touched
 		if (touch.x >= 0 and touch.x < 8) and (touch.y >= 0 and touch.y < 8) then
 			if selectedUnit ~= nil then
@@ -599,7 +603,7 @@ doAI = function()
 	local movesNow
 	local death = false
 	
-	if not gamePaused and not waitForAni and (#teammates > 0) then
+	if not gamePaused and not waitForAni and (#teammates > 0) and not gameOver then
 		if unitChoice == nil then
 			unitChoice = pickBestUnit(enemies)
 		end
@@ -640,7 +644,6 @@ doAI = function()
 			end
 			
 			if (movesNow == unitChoice.stats.live.moves) then
-				print(#teammates.." teammates now.")
 				table.insert(uselessUnits, unitChoice)
 				local i, j
 				for i in pairs(uselessUnits) do
@@ -650,22 +653,14 @@ doAI = function()
 						end
 					end
 				end
-				print(#teammates.." teammates now.")
 				unitChoice = pickBestUnit(teammates)
 				for i in pairs(uselessUnits) do
 					table.insert(teammates, uselessUnits[i])
 				end
-				print(#teammates.." teammates now.")
 				doWait = false
 			end
 			
 			boardForAI:destroyRangeVision()
-			print("Chosen unit at "..unitChoice.pos.x..", "..unitChoice.pos.y)
-			print("Victim unit at "..unitVictim.pos.x..", "..unitVictim.pos.y)
-			print(unitChoice.stats.live.moves.." moves left")
-			if not death and closest ~= nil then
-				print("Closest move spot at "..closest.x..", "..closest.y)
-			end
 		end
 		
 		if (unitChoice.stats.live.moves == 0) then

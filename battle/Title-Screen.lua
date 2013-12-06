@@ -8,15 +8,16 @@ local scene = storyboard.newScene()
 local options
 
 local levelNames = {}
-levelNames[1] = "Level 1"
-levelNames[2] = "Level 2"
-levelNames[3] = "Level 3"
-levelNames[4] = "Level 4"
-levelNames[5] = "Level 5"
-levelNames[6] = "Level 6"
-levelNames[7] = "Level 7"
-levelNames[8] = "Level 8"
-levelNames[9] = "Level 9"
+levelNames[1] = "1: Don't back down"
+levelNames[2] = "2: Tiananmen Square"
+levelNames[3] = "3: That's not fair"
+levelNames[4] = "4: Horsey!"
+levelNames[5] = "5: Welcome to Earth"
+levelNames[6] = "6: Calling for backup!"
+levelNames[7] = "7: WOAH! Look out!"
+levelNames[8] = "8: Vaguely familiar..."
+levelNames[9] = "9: Can't trust anyone"
+levelNames[10] = "10: Have fun with that"
 
 local salute, howToButton, winnerTrophy
 local blankButton, startButton, twoPlayerButton
@@ -27,7 +28,7 @@ local leftArrowTouch, rightArrowTouch, updateLevel
 
 local levelProgress, levelSelection
 local winner = false
-local maxLevel = 9
+local maxLevel = 10
 
 local loadLevelProgress, saveLevelProgress
 
@@ -84,7 +85,6 @@ function scene:enterScene(event)
 			if (event.params.unlockNextLevel) and (levelSelection == levelProgress) then
 				if levelProgress < maxLevel then
 					levelProgress = levelProgress + 1
-					levelSelection = levelProgress
 					winner = false
 					saveLevelProgress()
 				else

@@ -45,7 +45,7 @@ local heli = {
 	health = 5,
 	moves = 5
 }
-
+	
 local cannon = {
 	melee = {
 		atk = 0,
@@ -64,7 +64,7 @@ local cannon = {
 local cavalry = {
 	melee = {
 		atk = 4,
-		def = 3,
+		def = 2,
 		rng = 1
 	},
 	ranged = {
