@@ -127,7 +127,7 @@ function Unit:takeDamage(isMelee, attackPower)
 	if (self.stats.live.health <= 0) then
 		self:die()
 	end
-	flashAttackIndicator(self)
+	flashAttackIndicator(self, isMelee)
 end
 
 function Unit:die()
@@ -200,6 +200,48 @@ showDeathAnimation = function(dyingUnit)
 	
 	dyingUnit.group:insert(graphic)
 	graphic:toFront()
+	if dyingUnit.unitType == "tank_e" or dyingUnit.unitType == "tank_f" or dyingUnit.unitType == "cannon_e" or dyingUnit.unitType == "cannon_f" 
+	or dyingUnit.unitType == "heli_e" or dyingUnit.unitType == "heli_f" then
+		local sheetdata = {width = 32, height = 32, numFrames = 6, sheetContentWidth = 192, sheetContentHeight = 32}
+		local options = 
+		{
+			name = "explosion",
+			frames = {1, 2, 3, 4, 5, 6},
+			time = 250,
+			loopCount = 1
+		}
+		local imageSheet = graphics.newImageSheet("assets/explosion.png", sheetdata)
+		local anim = display.newSprite(imageSheet, options)
+		anim.x = animationLocX + 16
+		anim.y = animationLocY + 16
+		anim:play()
+		dyingUnit.group:insert(anim)
+		anim:toFront()
+		local function destroy ()
+			display.remove(anim)
+		end
+		timer.performWithDelay(250, destroy)
+	else
+		local sheetdata = {width = 32, height = 32, numFrames = 4, sheetContentWidth = 128, sheetContentHeight = 32}
+		local options = 
+		{
+			name = "death",
+			frames = {1, 2, 3, 4},
+			time = 250,
+			loopCount = 1
+		}
+		local imageSheet = graphics.newImageSheet("assets/death.png", sheetdata)
+		local anim = display.newSprite(imageSheet, options)
+		anim.x = animationLocX + 16
+		anim.y = animationLocY + 16
+		anim:play()
+		dyingUnit.group:insert(anim)
+		anim:toFront()
+		local function destroy()
+			display.remove(anim)
+		end
+		timer.performWithDelay(250, destroy)
+	end
 	local maxCountdown = 16
 	local countdown = maxCountdown
 	local function onEveryFrame()
@@ -244,30 +286,51 @@ flashDamageAmount = function(targetedUnit, damageAmount)
 	Runtime:addEventListener("enterFrame", onEveryFrame)
 end
 
-flashAttackIndicator = function(targetedUnit)
+flashAttackIndicator = function(targetedUnit, isMelee)
 	local animationLocX = (targetedUnit.pos.x * 32) + math.floor(math.random()*20) + 32 + 6
 	local animationLocY = (targetedUnit.pos.y * 32) + math.floor(math.random()*20) + 60 + 6
 	
-	local sheetdata = {width = 16, height = 20, numFrames = 4, sheetContentWidth = 64, sheetContentHeight = 20}
-	local options = 
-	{
-		name = "hit",
-		frames = {1, 2, 3, 4},
-		time = 160,
-		loopCount = 1
-	}
-	local imageSheet = graphics.newImageSheet("assets/hit.png", sheetdata)
-	local anim = display.newSprite(imageSheet, options)
-	anim.x = animationLocX
-	anim.y = animationLocY
-	anim:play()
-	
-	targetedUnit.group:insert(anim)
-	anim:toFront()
-	local function destroy ()
-		display.remove(anim)
+	if isMelee then
+		local sheetdata = {width = 16, height = 20, numFrames = 4, sheetContentWidth = 64, sheetContentHeight = 20}
+		local options = 
+		{
+			name = "hit",
+			frames = {1, 2, 3, 4},
+			time = 160,
+			loopCount = 1
+		}
+		local imageSheet = graphics.newImageSheet("assets/hit.png", sheetdata)
+		local anim = display.newSprite(imageSheet, options)
+		anim.x = animationLocX
+		anim.y = animationLocY
+		anim:play()
+		targetedUnit.group:insert(anim)
+		anim:toFront()
+		local function destroy ()
+			display.remove(anim)
+		end
+		timer.performWithDelay(250, destroy)
+	else
+		local sheetdata = {width = 25, height = 25, numFrames = 4, sheetContentWidth = 100, sheetContentHeight = 25}
+		local options = 
+		{
+			name = "hit",
+			frames = {1, 2, 3, 4},
+			time = 160,
+			loopCount = 1
+		}
+		local imageSheet = graphics.newImageSheet("assets/hit2.png", sheetdata)
+		local anim = display.newSprite(imageSheet, options)
+		anim.x = animationLocX
+		anim.y = animationLocY
+		anim:play()
+		targetedUnit.group:insert(anim)
+		anim:toFront()
+		local function destroy ()
+			display.remove(anim)
+		end
+		timer.performWithDelay(250, destroy)
 	end
-	timer.performWithDelay(250, destroy)
 end
 
 return Unit
