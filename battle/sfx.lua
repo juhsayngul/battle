@@ -48,7 +48,7 @@ end
 sfx.playAttSound = function(unitType)
 	if (unitType == "infantry_f") or (unitType == "infantry_e") then
 		audio.play(sfx.infAttack)
-	elseif (unitType == "m") or (unitType == "tank_e") then
+	elseif (unitType == "tank_f") or (unitType == "tank_e") then
 		audio.play(sfx.tankAttack)
 	elseif (unitType == "heli_f") or (unitType == "heli_e") then
 		audio.play(sfx.infAttack)
